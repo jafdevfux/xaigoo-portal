@@ -1,18 +1,12 @@
 # Xaigoo Pipeline — api/.htaccess
-# Apache 2.4 (HomeHost) — roteamento SPA + hardening da API
-# Compatível com hospedagem compartilhada cPanel / mod_rewrite / mod_headers
+# Apache 2.4 (HomeHost) — roteamento para api/index.php
+# IMPORTANTE: CORS é tratado 100% pelo PHP (api/helpers.php :: enableCors).
+# Não definir CORS aqui para não conflitar com preflight/reflexão de Origin.
 
 AddDefaultCharset UTF-8
-
-# Não listar diretórios
 Options -Indexes
-
-# Página de erro 404 cai no router (mantém JSON consistente)
 ErrorDocument 404 /api/index.php
 
-# ---------------------------------------------------------------------------
-# Bloqueio: config.php nunca deve ser servido diretamente
-# ---------------------------------------------------------------------------
 <Files "config.php">
     <IfModule mod_authz_core.c>
         Require all denied
@@ -23,7 +17,6 @@ ErrorDocument 404 /api/index.php
     </IfModule>
 </Files>
 
-# Bloqueia também .env e arquivos ocultos, se existirem por engano
 <FilesMatch "^\.">
     <IfModule mod_authz_core.c>
         Require all denied
@@ -34,56 +27,22 @@ ErrorDocument 404 /api/index.php
     </IfModule>
 </FilesMatch>
 
-# ---------------------------------------------------------------------------
-# Roteamento: tudo que não for arquivo/diretório real vai para index.php
-# ---------------------------------------------------------------------------
 <IfModule mod_rewrite.c>
     RewriteEngine On
     RewriteBase /api/
 
-    # Se o arquivo ou diretório existe no disco, serve direto
     RewriteCond %{REQUEST_FILENAME} -f [OR]
     RewriteCond %{REQUEST_FILENAME} -d
     RewriteRule ^ - [L]
 
-    # Caso contrário, roteia para o front-controller
     RewriteRule ^ index.php [L,QSA]
 </IfModule>
 
-# ---------------------------------------------------------------------------
-# CORS — fallback Apache (o PHP também envia os mesmos headers via helpers.php)
-# Mantido como fallback para que o preflight OPTIONS não falhe antes do PHP
-# quando o Apache intercepta. Valores espelham helpers.php / config.php.
-# ---------------------------------------------------------------------------
 <IfModule mod_headers.c>
-    # Origin dinâmico não pode ser feito só no htaccess; o PHP resolve o
-    # espelhamento fino. Aqui enviamos headers genéricos como fallback.
-    Header always set Access-Control-Allow-Methods "GET, POST, PUT, DELETE, OPTIONS"
-    Header always set Access-Control-Allow-Headers "Content-Type, Authorization, X-Requested-With, Cookie"
-    Header always set Access-Control-Max-Age "86400"
-    # Vary evita cache incorreto por Origin
-    Header always set Vary "Origin"
-
-    # Responde OPTIONS diretamente (204 No Content) quando mod_rewrite não
-    # roteou. Se o PHP já respondeu 204 via enableCors(), este bloco não
-    # interfere.
-    <IfModule mod_rewrite.c>
-        RewriteCond %{REQUEST_METHOD} OPTIONS
-        RewriteRule ^ - [R=204,L]
-    </IfModule>
-</IfModule>
-
-# ---------------------------------------------------------------------------
-# Segurança adicional
-# ---------------------------------------------------------------------------
-<IfModule mod_headers.c>
-    # Evita sniffing de MIME
     Header always set X-Content-Type-Options "nosniff"
-    # Não expor versão do servidor (quando permitido)
     Header always unset X-Powered-By
 </IfModule>
 
-# Negar acesso a .htaccess em si
 <Files ".htaccess">
     <IfModule mod_authz_core.c>
         Require all denied

@@ -17,7 +17,8 @@ require_once __DIR__ . '/config.php';
  */
 function getPDO(): PDO
 {
-    static ?PDO $pdo = null;
+    /** @var PDO|null */
+    static $pdo = null;
 
     if ($pdo instanceof PDO) {
         return $pdo;

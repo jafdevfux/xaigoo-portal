@@ -36,10 +36,30 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-  useEffect(() => {
+useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
+        // Detectar se a página foi recarregada (F5, atualizar)
+        const navEntries = performance.getEntriesByType('navigation');
+        const isReload = navEntries.length > 0 && (navEntries[0] as any).type === 'reload';
+
+        if (isReload) {
+          // Recarga: deslogar por segurança
+          try { await api.logout(); } catch { /* ignora */ }
+          if (!cancelled) setUser(null);
+          setLoading(false);
+          return;
+        }
+
+        // Não é recarga: verificar marca de sessão ativa (login manual)
+        const isActiveSession = sessionStorage.getItem('xaigoo_active');
+        if (!isActiveSession) {
+          try { await api.logout(); } catch { /* ignora */ }
+          if (!cancelled) setUser(null);
+          return;
+        }
+
         const u = await api.me();
         if (!cancelled) setUser(u);
       } catch (e) {
@@ -59,12 +79,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const login = useCallback(async (email: string, password: string): Promise<User> => {
     const u = await api.login({ email, password });
+    sessionStorage.setItem('xaigoo_active', '1');
     setUser(u);
     return u;
   }, []);
 
   const register = useCallback(async (name: string, email: string, password: string): Promise<User> => {
     const u = await api.register({ name, email, password });
+    sessionStorage.setItem('xaigoo_active', '1');
     setUser(u);
     return u;
   }, []);
@@ -73,6 +95,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     try {
       await api.logout();
     } finally {
+      sessionStorage.removeItem('xaigoo_active');
       setUser(null);
     }
   }, []);

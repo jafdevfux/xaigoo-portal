@@ -81,8 +81,9 @@ function enableCors(): void
         }
     }
 
-    header('Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS');
-    header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, Cookie');
+    header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS');
+    header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, Cookie, Accept, Origin');
+    header('Access-Control-Expose-Headers: Content-Type, Authorization');
     header('Access-Control-Max-Age: 86400');
 
     if (($_SERVER['REQUEST_METHOD'] ?? 'GET') === 'OPTIONS') {
@@ -207,16 +208,15 @@ function ensureSessionStarted(): void
     $sessionName = defined('AUTH_SESSION_NAME') ? AUTH_SESSION_NAME : 'xaigoo_session';
     session_name($sessionName);
 
-    $isSecure = defined('APP_ENV') && APP_ENV === 'production';
+    $isProduction = defined('APP_ENV') && APP_ENV === 'production';
 
-    // PHP 7.3+ aceita array associativo em session_set_cookie_params
     session_set_cookie_params([
         'lifetime' => 0,
         'path'     => '/',
         'domain'   => '',
-        'secure'   => $isSecure,
+        'secure'   => $isProduction ? true : false,
         'httponly' => true,
-        'samesite' => 'Lax',
+        'samesite' => $isProduction ? 'None' : 'Lax',
     ]);
 
     session_start();

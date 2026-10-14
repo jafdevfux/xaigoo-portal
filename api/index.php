@@ -10,12 +10,11 @@ declare(strict_types=1);
 require_once __DIR__ . '/config.php';
 require_once __DIR__ . '/db.php';
 require_once __DIR__ . '/helpers.php';
-require_once __DIR__ . '/auth.php';
 
-// ---------------------------------------------------------------------------
-// CORS + preflight
-// ---------------------------------------------------------------------------
+// CORS + preflight — antes de qualquer output
 enableCors();
+
+require_once __DIR__ . '/auth.php';
 
 // Garante Content-Type JSON em todas as respostas (mesmo em erros não tratados)
 header('Content-Type: application/json; charset=utf-8');
