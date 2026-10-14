@@ -1,0 +1,6 @@
+{
+  "name": "Xaigoo — Portal de Alinhamento Estratégico e Operacional",
+  "description": "Apresentação estratégica interativa e manual operacional de Marketing e Vendas para o ecossistema SaaS e AdTech Xaigoo, com foco na execução do STEP 1.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

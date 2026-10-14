@@ -1,0 +1,19 @@
+node_modules/
+build/
+dist/
+coverage/
+.DS_Store
+*.log
+.env
+!.env.example
+!.env.production
+# API PHP — credenciais reais (HomeHost)
+api/config.php
+server/.dev-users.json
+server/.dev-influencers.json
+.dev-influencers.json
+
+# Tool caches (não devem ir para GitHub)
+.omo/
+.codegraph/
+.codegraph
