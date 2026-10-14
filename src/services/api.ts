@@ -212,8 +212,8 @@ export function updateInfluencerStatus(
   id: string,
   status: InfluencerRecord['status']
 ): Promise<InfluencerRecord> {
-  return fetchJson<InfluencerRecord>(`/influencers/${encodeURIComponent(id)}/status`, {
-    method: 'PATCH',
+  return fetchJson<InfluencerRecord>(`/influencers/${encodeURIComponent(id)}`, {
+    method: 'PUT',
     body: JSON.stringify({ status }),
   });
 }

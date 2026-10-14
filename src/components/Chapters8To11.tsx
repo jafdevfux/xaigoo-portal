@@ -12,6 +12,8 @@ import {
   AlertCircle,
   MessageSquare,
   Users,
+  Pencil,
+  X,
 } from 'lucide-react';
 import {
   STEP1_FLOW_STAGES,
@@ -677,20 +679,73 @@ export const Chapter10DirectOutreach: React.FC<ChapterProps> = ({ onNavigateChap
   const [influencerName, setInfluencerName] = useState<string>('Carlos');
   const [copiedKey, setCopiedKey] = useState<string | null>(null);
 
+  // Custom message overrides (null = use auto-generated)
+  const [customOfficial, setCustomOfficial] = useState<string | null>(null);
+  const [customShort, setCustomShort] = useState<string | null>(null);
+  const [customFollowUp, setCustomFollowUp] = useState<string | null>(null);
+  const [customClose, setCustomClose] = useState<string | null>(null);
+
+  // Edit mode tracking
+  const [editingKey, setEditingKey] = useState<string | null>(null);
+  const [editDraft, setEditDraft] = useState<string>('');
+
   const displayName = influencerName.trim() ? influencerName.trim() : '[nome]';
 
-  const officialMessage = `Olá, ${displayName}! Tudo bem? Conhecemos seu conteúdo sobre o dia a dia dos motoristas de aplicativo e acreditamos que pode haver uma conexão interessante com o Xaigoo, um aplicativo desenvolvido para auxiliar motoristas. Estamos selecionando parceiros de divulgação e temos uma proposta que gostaríamos de apresentar. Podemos te enviar um material breve para você conhecer?`;
+  const generatedOfficial = `Olá, ${displayName}! Tudo bem? Conhecemos seu conteúdo sobre o dia a dia dos motoristas de aplicativo e acreditamos que pode haver uma conexão interessante com o Xaigoo, um aplicativo desenvolvido para auxiliar motoristas. Estamos selecionando parceiros de divulgação e temos uma proposta que gostaríamos de apresentar. Podemos te enviar um material breve para você conhecer?`;
 
-  const shortInstagramMessage = `Olá, ${displayName}! Tudo bem? Acompanhamos seu conteúdo para motoristas de app e vimos muita sinergia com o Xaigoo Copilot (app que ajuda o motorista a calcular lucro real por km e analisar corridas). Estamos selecionando parceiros de divulgação — posso te enviar uma proposta rápida por aqui para você avaliar?`;
+  const generatedShort = `Olá, ${displayName}! Tudo bem? Acompanhamos seu conteúdo para motoristas de app e vimos muita sinergia com o Xaigoo Copilot (app que ajuda o motorista a calcular lucro real por km e analisar corridas). Estamos selecionando parceiros de divulgação — posso te enviar uma proposta rápida por aqui para você avaliar?`;
 
-  const followUpMessage = `Olá, ${displayName}! Tudo bem? Passando apenas para saber se você chegou a ver nossa mensagem anterior sobre o Xaigoo Copilot. Caso faça sentido para o seu perfil conhecer nossa proposta de parceria para divulgadores, me avise que te envio o resumo por aqui. Um ótimo dia de trabalho!`;
+  const generatedFollowUp = `Olá, ${displayName}! Tudo bem? Passando apenas para saber se você chegou a ver nossa mensagem anterior sobre o Xaigoo Copilot. Caso faça sentido para o seu perfil conhecer nossa proposta de parceria para divulgadores, me avise que te envio o resumo por aqui. Um ótimo dia de trabalho!`;
 
-  const politeCloseMessage = `Perfeito, ${displayName}! Agradecemos muito pela atenção e pelo retorno. Seguimos acompanhando seu trabalho e deixamos as portas abertas para o futuro. Boas corridas e ótimo trabalho!`;
+  const generatedClose = `Perfeito, ${displayName}! Agradecemos muito pela atenção e pelo retorno. Seguimos acompanhando seu trabalho e deixamos as portas abertas para o futuro. Boas corridas e ótimo trabalho!`;
+
+  // Resolved messages: custom override or auto-generated
+  const officialMessage = customOfficial ?? generatedOfficial;
+  const shortInstagramMessage = customShort ?? generatedShort;
+  const followUpMessage = customFollowUp ?? generatedFollowUp;
+  const politeCloseMessage = customClose ?? generatedClose;
 
   const handleCopy = (key: string, text: string) => {
     navigator.clipboard.writeText(text);
     setCopiedKey(key);
     setTimeout(() => setCopiedKey(null), 2000);
+  };
+
+  const startEdit = (key: string, currentText: string) => {
+    setEditingKey(key);
+    setEditDraft(currentText);
+  };
+
+  const saveEdit = (key: string) => {
+    const trimmed = editDraft.trim();
+    if (key === 'official') setCustomOfficial(trimmed || null);
+    else if (key === 'short') setCustomShort(trimmed || null);
+    else if (key === 'followup') setCustomFollowUp(trimmed || null);
+    else if (key === 'close') setCustomClose(trimmed || null);
+    setEditingKey(null);
+    setEditDraft('');
+  };
+
+  const cancelEdit = () => {
+    setEditingKey(null);
+    setEditDraft('');
+  };
+
+  const resetToGenerated = (key: string) => {
+    if (key === 'official') setCustomOfficial(null);
+    else if (key === 'short') setCustomShort(null);
+    else if (key === 'followup') setCustomFollowUp(null);
+    else if (key === 'close') setCustomClose(null);
+    setEditingKey(null);
+    setEditDraft('');
+  };
+
+  const isCustomized = (key: string): boolean => {
+    if (key === 'official') return customOfficial !== null;
+    if (key === 'short') return customShort !== null;
+    if (key === 'followup') return customFollowUp !== null;
+    if (key === 'close') return customClose !== null;
+    return false;
   };
 
   return (
@@ -737,83 +792,323 @@ export const Chapter10DirectOutreach: React.FC<ChapterProps> = ({ onNavigateChap
           {/* Script 1: Official Briefing Message */}
           <div className="p-6 bg-slate-50 border border-slate-200 rounded-xl flex flex-col justify-between space-y-4">
             <div className="space-y-2">
-              <div className="text-xs font-mono font-bold text-violet-700">
-                OPÇÃO 01 · MENSAGEM PADRÃO OFICIAL (COMPLETA)
+              <div className="flex items-center justify-between">
+                <div className="text-xs font-mono font-bold text-violet-700">
+                  OPÇÃO 01 · MENSAGEM PADRÃO OFICIAL (COMPLETA)
+                </div>
+                <div className="flex items-center gap-1.5">
+                  {isCustomized('official') && (
+                    <span className="text-[10px] font-semibold bg-violet-100 text-violet-700 px-1.5 py-0.5 rounded">Editado</span>
+                  )}
+                  {editingKey !== 'official' && (
+                    <button
+                      onClick={() => startEdit('official', officialMessage)}
+                      title="Editar mensagem"
+                      className="p-1 rounded-md hover:bg-slate-200 text-slate-500 hover:text-violet-700 transition-colors cursor-pointer"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
               </div>
               <h3 className="text-base font-bold text-slate-950 font-display">
                 Primeiro Contato — Modelo Oficial do Briefing
               </h3>
-              <p className="text-xs text-slate-700 leading-relaxed bg-white p-4 rounded-lg border border-slate-200">
-                “{officialMessage}”
-              </p>
+              {editingKey === 'official' ? (
+                <div className="space-y-2">
+                  <textarea
+                    value={editDraft}
+                    onChange={(e) => setEditDraft(e.target.value)}
+                    rows={6}
+                    className="w-full text-xs text-slate-700 leading-relaxed bg-white p-4 rounded-lg border border-violet-300 focus:border-violet-500 focus:ring-1 focus:ring-violet-500 outline-none resize-y"
+                  />
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <button
+                      onClick={() => saveEdit('official')}
+                      className="py-1.5 px-3 bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Check className="w-3.5 h-3.5" /> Salvar
+                    </button>
+                    <button
+                      onClick={cancelEdit}
+                      className="py-1.5 px-3 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" /> Cancelar
+                    </button>
+                    {isCustomized('official') && (
+                      <button
+                        onClick={() => resetToGenerated('official')}
+                        className="py-1.5 px-3 text-amber-700 hover:bg-amber-50 text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+                      >
+                        Restaurar Original
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs text-slate-700 leading-relaxed bg-white p-4 rounded-lg border border-slate-200">
+                  “{officialMessage}”
+                </p>
+              )}
             </div>
-            <button
-              onClick={() => handleCopy('official', officialMessage)}
-              className="w-full py-2.5 px-4 bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 cursor-pointer"
-            >
-              {copiedKey === 'official' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-              <span>{copiedKey === 'official' ? 'Mensagem Copiada!' : 'Copiar Mensagem Oficial'}</span>
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleCopy('official', officialMessage)}
+                className="flex-1 py-2.5 px-4 bg-violet-600 hover:bg-violet-500 text-white text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 cursor-pointer"
+              >
+                {copiedKey === 'official' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                <span>{copiedKey === 'official' ? 'Mensagem Copiada!' : 'Copiar Mensagem Oficial'}</span>
+              </button>
+              {isCustomized('official') && editingKey !== 'official' && (
+                <button
+                  onClick={() => resetToGenerated('official')}
+                  title="Restaurar mensagem original"
+                  className="py-2.5 px-3 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-xs font-semibold rounded-lg transition-colors cursor-pointer whitespace-nowrap"
+                >
+                  Restaurar
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Script 2: Shorter Instagram Version */}
           <div className="p-6 bg-slate-50 border border-slate-200 rounded-xl flex flex-col justify-between space-y-4">
             <div className="space-y-2">
-              <div className="text-xs font-mono font-bold text-emerald-700">
-                OPÇÃO 02 · VERSÃO MAIS CURTA E NATURAL PARA INSTAGRAM
+              <div className="flex items-center justify-between">
+                <div className="text-xs font-mono font-bold text-emerald-700">
+                  OPÇÃO 02 · VERSÃO MAIS CURTA E NATURAL PARA INSTAGRAM
+                </div>
+                <div className="flex items-center gap-1.5">
+                  {isCustomized('short') && (
+                    <span className="text-[10px] font-semibold bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded">Editado</span>
+                  )}
+                  {editingKey !== 'short' && (
+                    <button
+                      onClick={() => startEdit('short', shortInstagramMessage)}
+                      title="Editar mensagem"
+                      className="p-1 rounded-md hover:bg-slate-200 text-slate-500 hover:text-emerald-700 transition-colors cursor-pointer"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
               </div>
               <h3 className="text-base font-bold text-slate-950 font-display">
                 Primeiro Contato — Direto e Conversacional
               </h3>
-              <p className="text-xs text-slate-700 leading-relaxed bg-white p-4 rounded-lg border border-slate-200">
-                “{shortInstagramMessage}”
-              </p>
+              {editingKey === 'short' ? (
+                <div className="space-y-2">
+                  <textarea
+                    value={editDraft}
+                    onChange={(e) => setEditDraft(e.target.value)}
+                    rows={6}
+                    className="w-full text-xs text-slate-700 leading-relaxed bg-white p-4 rounded-lg border border-emerald-300 focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 outline-none resize-y"
+                  />
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <button
+                      onClick={() => saveEdit('short')}
+                      className="py-1.5 px-3 bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Check className="w-3.5 h-3.5" /> Salvar
+                    </button>
+                    <button
+                      onClick={cancelEdit}
+                      className="py-1.5 px-3 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" /> Cancelar
+                    </button>
+                    {isCustomized('short') && (
+                      <button
+                        onClick={() => resetToGenerated('short')}
+                        className="py-1.5 px-3 text-amber-700 hover:bg-amber-50 text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+                      >
+                        Restaurar Original
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs text-slate-700 leading-relaxed bg-white p-4 rounded-lg border border-slate-200">
+                  “{shortInstagramMessage}”
+                </p>
+              )}
             </div>
-            <button
-              onClick={() => handleCopy('short', shortInstagramMessage)}
-              className="w-full py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 cursor-pointer"
-            >
-              {copiedKey === 'short' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
-              <span>{copiedKey === 'short' ? 'Mensagem Copiada!' : 'Copiar Versão Curta Instagram'}</span>
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleCopy('short', shortInstagramMessage)}
+                className="flex-1 py-2.5 px-4 bg-slate-900 hover:bg-slate-800 text-white text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 cursor-pointer"
+              >
+                {copiedKey === 'short' ? <Check className="w-4 h-4" /> : <Copy className="w-4 h-4" />}
+                <span>{copiedKey === 'short' ? 'Mensagem Copiada!' : 'Copiar Versão Curta Instagram'}</span>
+              </button>
+              {isCustomized('short') && editingKey !== 'short' && (
+                <button
+                  onClick={() => resetToGenerated('short')}
+                  title="Restaurar mensagem original"
+                  className="py-2.5 px-3 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-xs font-semibold rounded-lg transition-colors cursor-pointer whitespace-nowrap"
+                >
+                  Restaurar
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Script 3: Respectful Follow-up */}
           <div className="p-5 bg-slate-50 border border-slate-200 rounded-xl flex flex-col justify-between space-y-3">
             <div className="space-y-2">
-              <div className="text-xs font-mono font-bold text-amber-800">
-                ACOMPANHAMENTO RESPEITOSO E LIMITADO (CASO NÃO RESPONDA)
+              <div className="flex items-center justify-between">
+                <div className="text-xs font-mono font-bold text-amber-800">
+                  ACOMPANHAMENTO RESPEITOSO E LIMITADO (CASO NÃO RESPONDA)
+                </div>
+                <div className="flex items-center gap-1.5">
+                  {isCustomized('followup') && (
+                    <span className="text-[10px] font-semibold bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded">Editado</span>
+                  )}
+                  {editingKey !== 'followup' && (
+                    <button
+                      onClick={() => startEdit('followup', followUpMessage)}
+                      title="Editar mensagem"
+                      className="p-1 rounded-md hover:bg-slate-200 text-slate-500 hover:text-amber-700 transition-colors cursor-pointer"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
               </div>
-              <p className="text-xs text-slate-700 leading-relaxed bg-white p-3.5 rounded-lg border border-slate-200">
-                “{followUpMessage}”
-              </p>
+              {editingKey === 'followup' ? (
+                <div className="space-y-2">
+                  <textarea
+                    value={editDraft}
+                    onChange={(e) => setEditDraft(e.target.value)}
+                    rows={5}
+                    className="w-full text-xs text-slate-700 leading-relaxed bg-white p-3.5 rounded-lg border border-amber-300 focus:border-amber-500 focus:ring-1 focus:ring-amber-500 outline-none resize-y"
+                  />
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <button
+                      onClick={() => saveEdit('followup')}
+                      className="py-1.5 px-3 bg-amber-600 hover:bg-amber-500 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Check className="w-3.5 h-3.5" /> Salvar
+                    </button>
+                    <button
+                      onClick={cancelEdit}
+                      className="py-1.5 px-3 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" /> Cancelar
+                    </button>
+                    {isCustomized('followup') && (
+                      <button
+                        onClick={() => resetToGenerated('followup')}
+                        className="py-1.5 px-3 text-amber-700 hover:bg-amber-50 text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+                      >
+                        Restaurar Original
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs text-slate-700 leading-relaxed bg-white p-3.5 rounded-lg border border-slate-200">
+                  “{followUpMessage}”
+                </p>
+              )}
             </div>
-            <button
-              onClick={() => handleCopy('followup', followUpMessage)}
-              className="py-2 px-3 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 cursor-pointer"
-            >
-              {copiedKey === 'followup' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-              <span>{copiedKey === 'followup' ? 'Copiado!' : 'Copiar Acompanhamento Único'}</span>
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleCopy('followup', followUpMessage)}
+                className="flex-1 py-2 px-3 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 cursor-pointer"
+              >
+                {copiedKey === 'followup' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>{copiedKey === 'followup' ? 'Copiado!' : 'Copiar Acompanhamento Único'}</span>
+              </button>
+              {isCustomized('followup') && editingKey !== 'followup' && (
+                <button
+                  onClick={() => resetToGenerated('followup')}
+                  title="Restaurar mensagem original"
+                  className="py-2 px-3 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-xs font-semibold rounded-lg transition-colors cursor-pointer whitespace-nowrap"
+                >
+                  Restaurar
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Script 4: Polite Close on Refusal */}
           <div className="p-5 bg-slate-50 border border-slate-200 rounded-xl flex flex-col justify-between space-y-3">
             <div className="space-y-2">
-              <div className="text-xs font-mono font-bold text-slate-600">
-                ENCERRAMENTO CORDIAL (EM CASO DE RECUSA)
+              <div className="flex items-center justify-between">
+                <div className="text-xs font-mono font-bold text-slate-600">
+                  ENCERRAMENTO CORDIAL (EM CASO DE RECUSA)
+                </div>
+                <div className="flex items-center gap-1.5">
+                  {isCustomized('close') && (
+                    <span className="text-[10px] font-semibold bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded">Editado</span>
+                  )}
+                  {editingKey !== 'close' && (
+                    <button
+                      onClick={() => startEdit('close', politeCloseMessage)}
+                      title="Editar mensagem"
+                      className="p-1 rounded-md hover:bg-slate-200 text-slate-500 hover:text-slate-700 transition-colors cursor-pointer"
+                    >
+                      <Pencil className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
               </div>
-              <p className="text-xs text-slate-700 leading-relaxed bg-white p-3.5 rounded-lg border border-slate-200">
-                “{politeCloseMessage}”
-              </p>
+              {editingKey === 'close' ? (
+                <div className="space-y-2">
+                  <textarea
+                    value={editDraft}
+                    onChange={(e) => setEditDraft(e.target.value)}
+                    rows={4}
+                    className="w-full text-xs text-slate-700 leading-relaxed bg-white p-3.5 rounded-lg border border-slate-400 focus:border-slate-500 focus:ring-1 focus:ring-slate-500 outline-none resize-y"
+                  />
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <button
+                      onClick={() => saveEdit('close')}
+                      className="py-1.5 px-3 bg-slate-700 hover:bg-slate-600 text-white text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <Check className="w-3.5 h-3.5" /> Salvar
+                    </button>
+                    <button
+                      onClick={cancelEdit}
+                      className="py-1.5 px-3 bg-white hover:bg-slate-100 text-slate-700 border border-slate-300 text-xs font-semibold rounded-lg transition-colors flex items-center gap-1.5 cursor-pointer"
+                    >
+                      <X className="w-3.5 h-3.5" /> Cancelar
+                    </button>
+                    {isCustomized('close') && (
+                      <button
+                        onClick={() => resetToGenerated('close')}
+                        className="py-1.5 px-3 text-amber-700 hover:bg-amber-50 text-xs font-semibold rounded-lg transition-colors cursor-pointer"
+                      >
+                        Restaurar Original
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <p className="text-xs text-slate-700 leading-relaxed bg-white p-3.5 rounded-lg border border-slate-200">
+                  “{politeCloseMessage}”
+                </p>
+              )}
             </div>
-            <button
-              onClick={() => handleCopy('close', politeCloseMessage)}
-              className="py-2 px-3 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 cursor-pointer"
-            >
-              {copiedKey === 'close' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
-              <span>{copiedKey === 'close' ? 'Copiado!' : 'Copiar Encerramento Cordial'}</span>
-            </button>
+            <div className="flex gap-2">
+              <button
+                onClick={() => handleCopy('close', politeCloseMessage)}
+                className="flex-1 py-2 px-3 bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 text-xs font-semibold rounded-lg transition-colors flex items-center justify-center gap-2 cursor-pointer"
+              >
+                {copiedKey === 'close' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>{copiedKey === 'close' ? 'Copiado!' : 'Copiar Encerramento Cordial'}</span>
+              </button>
+              {isCustomized('close') && editingKey !== 'close' && (
+                <button
+                  onClick={() => resetToGenerated('close')}
+                  title="Restaurar mensagem original"
+                  className="py-2 px-3 bg-amber-50 hover:bg-amber-100 text-amber-700 border border-amber-200 text-xs font-semibold rounded-lg transition-colors cursor-pointer whitespace-nowrap"
+                >
+                  Restaurar
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </section>
