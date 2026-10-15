@@ -106,6 +106,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } finally {
       sessionStorage.removeItem('xaigoo_active');
       setUser(null);
+      // Notifica painéis de colaboradores para limpar online instantaneamente
+      window.dispatchEvent(new CustomEvent('xaigoo:logout'));
     }
   }, []);
 

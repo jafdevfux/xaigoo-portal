@@ -249,6 +249,28 @@ export default function PipelinePage() {
 
   const [showOnlinePanel, setShowOnlinePanel] = useState(false);
 
+  // Detecta logout em outra aba (sessionStorage xaigoo_active removido) → limpa online instantaneamente
+  useEffect(() => {
+    const onStorage = (e: StorageEvent) => {
+      if (e.key === 'xaigoo_active' && e.newValue === null) {
+        setOnlineUsers([]);
+        setOnlineLoading(false);
+        void fetchOnline();
+      }
+    };
+    const onLogout = () => {
+      setOnlineUsers([]);
+      setOnlineLoading(false);
+      void fetchOnline();
+    };
+    window.addEventListener('storage', onStorage);
+    window.addEventListener('xaigoo:logout', onLogout as EventListener);
+    return () => {
+      window.removeEventListener('storage', onStorage);
+      window.removeEventListener('xaigoo:logout', onLogout as EventListener);
+    };
+  }, [fetchOnline]);
+
   const filteredRecords = useMemo(() => {
     const q = search.trim().toLowerCase();
     return records.filter((r) => {
