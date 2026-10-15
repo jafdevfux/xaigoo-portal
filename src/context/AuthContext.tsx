@@ -36,7 +36,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, []);
 
-useEffect(() => {
+  useEffect(() => {
     let cancelled = false;
     (async () => {
       try {
@@ -72,8 +72,17 @@ useEffect(() => {
         if (!cancelled) setLoading(false);
       }
     })();
+
+    // Heartbeat periódico: renova a marca de "online" no servidor (TTL 60s)
+    const heartbeat = setInterval(() => {
+      if (cancelled) return;
+      if (!sessionStorage.getItem('xaigoo_active')) return;
+      api.me().then((u) => { if (!cancelled && u) setUser(u); }).catch(() => {});
+    }, 30_000);
+
     return () => {
       cancelled = true;
+      clearInterval(heartbeat);
     };
   }, [refresh]);
 
