@@ -123,6 +123,7 @@ export interface InfluencerRecord {
     | 'Selecionado'
     | 'Primeiro contato enviado'
     | 'Aguardando resposta'
+    | 'Aguardando sistema IOS'
     | 'Autorizou o envio'
     | 'Material enviado'
     | 'Em avaliação'

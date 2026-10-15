@@ -64,7 +64,7 @@ CREATE TABLE IF NOT EXISTS `influencers` (
   `audience_type`      TEXT          DEFAULT NULL,
   `justification`      TEXT          DEFAULT NULL,
   `first_contact_date` DATE          DEFAULT NULL,
-  `status`             ENUM('A pesquisar','Selecionado','Primeiro contato enviado','Aguardando resposta','Autorizou o envio','Material enviado','Em avaliação','Parceria aprovada','Em execução','Encerrado','Não interessado','Sem resposta após acompanhamento') NOT NULL DEFAULT 'A pesquisar',
+  `status`             ENUM('A pesquisar','Selecionado','Primeiro contato enviado','Aguardando resposta','Aguardando sistema IOS','Autorizou o envio','Material enviado','Em avaliação','Parceria aprovada','Em execução','Encerrado','Não interessado','Sem resposta após acompanhamento') NOT NULL DEFAULT 'A pesquisar',
   `response_received`  ENUM('Pendente','Positiva (Autorizou)','Com dúvidas','Recusou','Sem resposta') NOT NULL DEFAULT 'Pendente',
   `proposal_sent`      TINYINT(1)    NOT NULL DEFAULT 0,
   `videos_sent`        TINYINT(1)    NOT NULL DEFAULT 0,

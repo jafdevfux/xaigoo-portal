@@ -47,7 +47,7 @@ async function initDb(): Promise<void> {
         \`audience_type\` TEXT DEFAULT NULL,
         \`justification\` TEXT DEFAULT NULL,
         \`first_contact_date\` DATE DEFAULT NULL,
-        \`status\` ENUM('A pesquisar','Selecionado','Primeiro contato enviado','Aguardando resposta','Autorizou o envio','Material enviado','Em avaliação','Parceria aprovada','Em execução','Encerrado','Não interessado','Sem resposta após acompanhamento') NOT NULL DEFAULT 'A pesquisar',
+        \`status\` ENUM('A pesquisar','Selecionado','Primeiro contato enviado','Aguardando resposta','Aguardando sistema IOS','Autorizou o envio','Material enviado','Em avaliação','Parceria aprovada','Em execução','Encerrado','Não interessado','Sem resposta após acompanhamento') NOT NULL DEFAULT 'A pesquisar',
         \`response_received\` ENUM('Pendente','Positiva (Autorizou)','Com dúvidas','Recusou','Sem resposta') NOT NULL DEFAULT 'Pendente',
         \`proposal_sent\` TINYINT(1) NOT NULL DEFAULT 0,
         \`videos_sent\` TINYINT(1) NOT NULL DEFAULT 0,
@@ -93,6 +93,7 @@ export type InfluencerStatus =
   | 'Selecionado'
   | 'Primeiro contato enviado'
   | 'Aguardando resposta'
+  | 'Aguardando sistema IOS'
   | 'Autorizou o envio'
   | 'Material enviado'
   | 'Em avaliação'
@@ -127,6 +128,7 @@ const VALID_STATUSES: readonly InfluencerStatus[] = [
   'Selecionado',
   'Primeiro contato enviado',
   'Aguardando resposta',
+  'Aguardando sistema IOS',
   'Autorizou o envio',
   'Material enviado',
   'Em avaliação',
@@ -374,6 +376,16 @@ app.post('/api/auth/login', async (req, res) => {
 });
 
 // Me
+const onlineUsers = new Map<string, { id: string; name: string; email: string; lastSeen: number }>();
+const ONLINE_TTL_MS = 60_000; // 60s de "online"
+
+function pruneOnline(): void {
+  const cutoff = Date.now() - ONLINE_TTL_MS;
+  for (const [k, v] of onlineUsers) {
+    if (v.lastSeen < cutoff) onlineUsers.delete(k);
+  }
+}
+
 app.get('/api/auth/me', async (req, res) => {
   const uid = (req.session as any)?.user_id;
   if (!uid) return res.status(401).json({ error: 'Não autenticado.' });
@@ -387,7 +399,18 @@ app.get('/api/auth/me', async (req, res) => {
     row = loadDevUsers().find(u => u.id === uid) ?? null;
   }
   if (!row) { (req.session as any).user_id = null; return res.status(401).json({ error: 'Não autenticado.' }); }
+  // Marca como online
+  onlineUsers.set(uid, { id: row.id, name: row.name, email: row.email, lastSeen: Date.now() });
   res.json(publicUser(row));
+});
+
+// Quem está online (últimos 60s)
+app.get('/api/auth/online', async (_req, res) => {
+  pruneOnline();
+  const list = Array.from(onlineUsers.values())
+    .sort((a, b) => b.lastSeen - a.lastSeen)
+    .map(({ id, name, email }) => ({ id, name, email }));
+  res.json({ online: list, count: list.length });
 });
 
 // Logout

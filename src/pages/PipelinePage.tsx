@@ -26,6 +26,8 @@ import {
   CheckCircle2,
   Clock3,
   Loader2,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import type { InfluencerRecord } from '../data/operationalData';
 import { INITIAL_INFLUENCER_RECORDS } from '../data/operationalData';
@@ -33,10 +35,12 @@ import {
   ApiError,
   createInfluencer,
   deleteInfluencer,
+  getOnlineUsers,
   listInfluencers,
   updateInfluencer,
   updateInfluencerStatus,
   type CreateInfluencerPayload,
+  type OnlineUser,
 } from '../services/api';
 
 // ---------------------------------------------------------------------------
@@ -47,6 +51,7 @@ const ALL_STATUSES: InfluencerRecord['status'][] = [
   'Selecionado',
   'Primeiro contato enviado',
   'Aguardando resposta',
+  'Aguardando sistema IOS',
   'Autorizou o envio',
   'Material enviado',
   'Em avaliação',
@@ -79,6 +84,7 @@ const STATUS_GROUP: Record<InfluencerRecord['status'], KanbanGroup> = {
   'Selecionado': 'Prospecção',
   'Primeiro contato enviado': 'Contato',
   'Aguardando resposta': 'Contato',
+  'Aguardando sistema IOS': 'Contato',
   'Autorizou o envio': 'Contato',
   'Material enviado': 'Negociação',
   'Em avaliação': 'Negociação',
@@ -103,6 +109,7 @@ const STATUS_STYLE: Record<InfluencerRecord['status'], { dot: string; badge: str
   'Selecionado': { dot: 'bg-blue-500', badge: 'bg-blue-50 text-blue-700 border-blue-200', border: 'border-blue-200' },
   'Primeiro contato enviado': { dot: 'bg-amber-500', badge: 'bg-amber-50 text-amber-800 border-amber-200', border: 'border-amber-200' },
   'Aguardando resposta': { dot: 'bg-orange-500', badge: 'bg-orange-50 text-orange-800 border-orange-200', border: 'border-orange-200' },
+  'Aguardando sistema IOS': { dot: 'bg-sky-500', badge: 'bg-sky-50 text-sky-800 border-sky-200', border: 'border-sky-200' },
   'Autorizou o envio': { dot: 'bg-emerald-500', badge: 'bg-emerald-50 text-emerald-800 border-emerald-200', border: 'border-emerald-200' },
   'Material enviado': { dot: 'bg-violet-500', badge: 'bg-violet-50 text-violet-700 border-violet-200', border: 'border-violet-200' },
   'Em avaliação': { dot: 'bg-violet-600', badge: 'bg-violet-50 text-violet-800 border-violet-200', border: 'border-violet-200' },
@@ -183,6 +190,21 @@ export default function PipelinePage() {
   const [dragOverStatus, setDragOverStatus] = useState<InfluencerRecord['status'] | null>(null);
   const draggedIdRef = useRef<string | null>(null);
 
+  // Colaboradores online
+  const [onlineUsers, setOnlineUsers] = useState<OnlineUser[]>([]);
+  const [onlineLoading, setOnlineLoading] = useState(true);
+
+  const fetchOnline = useCallback(async () => {
+    try {
+      const res = await getOnlineUsers();
+      setOnlineUsers(res.online);
+    } catch {
+      setOnlineUsers([]);
+    } finally {
+      setOnlineLoading(false);
+    }
+  }, []);
+
   // Toast
   const [toasts, setToasts] = useState<Toast[]>([]);
   const toastSeq = useRef(1);
@@ -220,7 +242,12 @@ export default function PipelinePage() {
 
   useEffect(() => {
     void fetchRecords();
-  }, [fetchRecords]);
+    void fetchOnline();
+    const interval = setInterval(() => void fetchOnline(), 30_000);
+    return () => clearInterval(interval);
+  }, [fetchRecords, fetchOnline]);
+
+  const [showOnlinePanel, setShowOnlinePanel] = useState(false);
 
   const filteredRecords = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -452,6 +479,73 @@ export default function PipelinePage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
+      {/* Botão flutuante lateral esquerdo — Colaboradores online */}
+      <button
+        type="button"
+        aria-label={showOnlinePanel ? 'Ocultar colaboradores' : 'Mostrar colaboradores online'}
+        aria-expanded={showOnlinePanel}
+        onClick={() => setShowOnlinePanel((p) => !p)}
+        className="fixed left-0 top-1/2 -translate-y-1/2 z-40 hidden lg:flex items-center gap-2 px-3 py-2.5 bg-white border border-slate-200 rounded-r-full shadow-lg hover:shadow-xl hover:bg-violet-50 transition-all duration-200"
+      >
+        {showOnlinePanel ? <EyeOff className="w-4 h-4 text-slate-600" /> : <Eye className="w-4 h-4 text-slate-600" />}
+        <span className="text-xs font-semibold text-slate-700 whitespace-nowrap">
+          {showOnlinePanel ? 'Ocultar' : 'Colaboradores'}
+        </span>
+        <span className={`w-2 h-2 rounded-full ${onlineLoading ? 'bg-slate-300' : onlineUsers.length > 0 ? 'bg-emerald-500 animate-pulse' : 'bg-slate-300'}`} />
+      </button>
+
+      {/* Painel lateral esquerdo — Colaboradores online */}
+      {showOnlinePanel && (
+        <aside className="fixed left-0 top-0 z-40 h-full w-72 bg-white border-r border-slate-200 shadow-2xl flex flex-col">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
+            <div className="flex items-center gap-2">
+              <Users className="w-4 h-4 text-violet-700" />
+              <h2 className="text-sm font-bold text-slate-900 font-display">Colaboradores Online</h2>
+            </div>
+            <button
+              type="button"
+              onClick={() => setShowOnlinePanel(false)}
+              className="p-1 rounded-md hover:bg-slate-100 text-slate-500 hover:text-slate-900 cursor-pointer"
+              aria-label="Fechar painel"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+          <div className="px-4 py-2 text-xs font-mono text-slate-500 border-b border-slate-100">
+            Atualizado a cada 30s · {onlineUsers.length} online
+          </div>
+          <div className="flex-1 overflow-y-auto py-2">
+            {onlineLoading && onlineUsers.length === 0 ? (
+              <div className="flex items-center justify-center py-8 text-xs text-slate-400">
+                <Loader2 className="w-4 h-4 animate-spin mr-2" /> Carregando...
+              </div>
+            ) : onlineUsers.length === 0 ? (
+              <div className="px-4 py-8 text-center text-xs text-slate-400">
+                Nenhum colaborador online no momento.
+              </div>
+            ) : (
+              <ul className="space-y-1 px-2">
+                {onlineUsers.map((u) => (
+                  <li key={u.id} className="flex items-center gap-3 px-3 py-2 rounded-lg hover:bg-slate-50">
+                    <span className="relative flex h-3 w-3">
+                      <span className="absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75 animate-ping" />
+                      <span className="relative inline-flex rounded-full h-3 w-3 bg-emerald-500" />
+                    </span>
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium text-slate-900 truncate">{u.name}</p>
+                      <p className="text-[11px] text-slate-500 truncate">{u.email}</p>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
+          <div className="px-4 py-3 border-t border-slate-200 text-[11px] text-slate-400">
+            O LED verde indica usuário logado no portal. Deslogado = LED apagado.
+          </div>
+        </aside>
+      )}
+
       {/* Page header — container 1440 */}
       <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6 lg:py-8">
         {/* Breadcrumb */}

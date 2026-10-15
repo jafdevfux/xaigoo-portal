@@ -146,6 +146,7 @@ export type InfluencerRecord = {
     | 'Selecionado'
     | 'Primeiro contato enviado'
     | 'Aguardando resposta'
+    | 'Aguardando sistema IOS'
     | 'Autorizou o envio'
     | 'Material enviado'
     | 'Em avaliação'
@@ -216,6 +217,21 @@ export function updateInfluencerStatus(
     method: 'PUT',
     body: JSON.stringify({ status }),
   });
+}
+
+export type OnlineUser = {
+  id: string;
+  name: string;
+  email: string;
+};
+
+export type OnlineResponse = {
+  online: OnlineUser[];
+  count: number;
+};
+
+export function getOnlineUsers(): Promise<OnlineResponse> {
+  return fetchJson<OnlineResponse>('/auth/online', { method: 'GET' });
 }
 
 /**

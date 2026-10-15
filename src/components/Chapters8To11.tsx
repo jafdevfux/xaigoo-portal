@@ -203,6 +203,7 @@ export const Chapter9Influencers: React.FC<ChapterProps> = ({ onNavigateChapter 
     'Selecionado',
     'Primeiro contato enviado',
     'Aguardando resposta',
+    'Aguardando sistema IOS',
     'Autorizou o envio',
     'Material enviado',
     'Em avaliação',
