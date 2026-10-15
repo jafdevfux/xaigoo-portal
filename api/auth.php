@@ -127,6 +127,15 @@ function handleAuthRegister(): void
     session_regenerate_id(true);
     $_SESSION['user_id'] = $id;
 
+    // Heartbeat: marca updated_at para que /api/auth/online o encontre imediatamente
+    try {
+        $pdo = getPDO();
+        $upd = $pdo->prepare('UPDATE users SET updated_at = :now WHERE id = :id');
+        $upd->execute([':now' => date('Y-m-d H:i:s'), ':id' => $id]);
+    } catch (PDOException) {
+        // Não bloqueia registro
+    }
+
     // Busca linha recém criada para resposta consistente (sem hash)
     try {
         $pdo = getPDO();
@@ -197,6 +206,15 @@ function handleAuthLogin(): void
     ensureSessionStarted();
     session_regenerate_id(true);
     $_SESSION['user_id'] = $row['id'];
+
+    // Heartbeat: marca updated_at para que /api/auth/online o encontre imediatamente
+    try {
+        $pdo = getPDO();
+        $upd = $pdo->prepare('UPDATE users SET updated_at = :now WHERE id = :id');
+        $upd->execute([':now' => date('Y-m-d H:i:s'), ':id' => $row['id']]);
+    } catch (PDOException) {
+        // Não bloqueia login
+    }
 
     jsonResponse(authPublicUser($row), 200);
 }
