@@ -479,13 +479,13 @@ export default function PipelinePage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      {/* Botão flutuante lateral esquerdo — Colaboradores online */}
+      {/* Botão flutuante lateral esquerdo — abaixo do cabeçalho, Colaboradores online */}
       <button
         type="button"
         aria-label={showOnlinePanel ? 'Ocultar colaboradores' : 'Mostrar colaboradores online'}
         aria-expanded={showOnlinePanel}
         onClick={() => setShowOnlinePanel((p) => !p)}
-        className="fixed left-0 top-1/2 -translate-y-1/2 z-40 hidden lg:flex items-center gap-2 px-3 py-2.5 bg-white border border-slate-200 rounded-r-full shadow-lg hover:shadow-xl hover:bg-violet-50 transition-all duration-200"
+        className="fixed left-0 top-20 z-40 hidden lg:flex items-center gap-2 px-3 py-2 bg-white border border-slate-200 rounded-r-full shadow-md hover:shadow-lg hover:bg-violet-50 transition-all duration-200"
       >
         {showOnlinePanel ? <EyeOff className="w-4 h-4 text-slate-600" /> : <Eye className="w-4 h-4 text-slate-600" />}
         <span className="text-xs font-semibold text-slate-700 whitespace-nowrap">
@@ -496,8 +496,8 @@ export default function PipelinePage() {
 
       {/* Painel lateral esquerdo — Colaboradores online */}
       {showOnlinePanel && (
-        <aside className="fixed left-0 top-0 z-40 h-full w-72 bg-white border-r border-slate-200 shadow-2xl flex flex-col">
-          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200">
+        <aside className="fixed left-0 top-20 z-40 h-[calc(100vh-5rem)] w-72 bg-white border-r border-slate-200 shadow-2xl flex flex-col rounded-b-xl">
+          <div className="flex items-center justify-between px-4 py-3 border-b border-slate-200 bg-violet-50/50 rounded-t-xl">
             <div className="flex items-center gap-2">
               <Users className="w-4 h-4 text-violet-700" />
               <h2 className="text-sm font-bold text-slate-900 font-display">Colaboradores Online</h2>
@@ -505,7 +505,7 @@ export default function PipelinePage() {
             <button
               type="button"
               onClick={() => setShowOnlinePanel(false)}
-              className="p-1 rounded-md hover:bg-slate-100 text-slate-500 hover:text-slate-900 cursor-pointer"
+              className="p-1 rounded-md hover:bg-slate-200 text-slate-500 hover:text-slate-900 cursor-pointer"
               aria-label="Fechar painel"
             >
               <X className="w-4 h-4" />
