@@ -233,7 +233,47 @@ function handleAuthMe(): void
         errorResponse('Não autenticado.', 401);
     }
 
+    // Heartbeat: atualiza updated_at para marcar como online (TTL 60s)
+    try {
+        $pdo = getPDO();
+        $upd = $pdo->prepare('UPDATE users SET updated_at = :now WHERE id = :id');
+        $upd->execute([':now' => date('Y-m-d H:i:s'), ':id' => $userId]);
+    } catch (PDOException) {
+        // Não bloqueia a resposta do me() se o UPDATE falhar
+    }
+
     jsonResponse(authPublicUser($row), 200);
+}
+
+/**
+ * GET /api/auth/online
+ * Lista usuários com updated_at nos últimos 60 segundos (online).
+ * O heartbeat do frontend chama /api/auth/me a cada 30s, que atualiza updated_at.
+ */
+function handleAuthOnline(): void
+{
+    requireMethod('GET');
+    ensureSessionStarted();
+
+    $cutoff = time() - 60;
+
+    try {
+        $pdo = getPDO();
+        $stmt = $pdo->prepare(
+            'SELECT id, name, email FROM users WHERE updated_at >= :cutoff ORDER BY updated_at DESC'
+        );
+        $stmt->execute([':cutoff' => date('Y-m-d H:i:s', $cutoff)]);
+        $rows = $stmt->fetchAll();
+    } catch (PDOException $e) {
+        errorResponse('Erro ao buscar usuários online.', 500);
+    }
+
+    $list = [];
+    foreach ($rows as $r) {
+        $list[] = ['id' => $r['id'], 'name' => $r['name'], 'email' => $r['email']];
+    }
+
+    jsonResponse(['online' => $list, 'count' => count($list)], 200);
 }
 
 /**

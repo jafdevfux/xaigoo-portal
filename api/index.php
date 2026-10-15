@@ -158,6 +158,9 @@ if (($segments[0] ?? null) === 'auth') {
     if ($action === 'logout') {
         handleAuthLogout();
     }
+    if ($action === 'online') {
+        handleAuthOnline();
+    }
 
     errorResponse('Not Found', 404);
 }
