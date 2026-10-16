@@ -137,6 +137,7 @@ export interface InfluencerRecord {
   videosSent: boolean;
   nextAction: string;
   notes: string;
+  segmentation_level?: number | null; // 1 | 2 | null (IA off)
 }
 
 export const INITIAL_INFLUENCER_RECORDS: InfluencerRecord[] = [

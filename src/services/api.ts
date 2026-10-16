@@ -160,6 +160,7 @@ export type InfluencerRecord = {
   videosSent: boolean;
   nextAction: string;
   notes: string;
+  segmentation_level?: number | null; // 1 | 2 | null (IA off)
   created_at?: string;
   updated_at?: string;
 };

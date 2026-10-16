@@ -207,6 +207,8 @@ function handleAuthLogin(): void
     session_regenerate_id(true);
     $_SESSION['user_id'] = $row['id'];
 
+    $sessionId = session_id();
+
     // Heartbeat: marca updated_at para que /api/auth/online o encontre imediatamente
     try {
         $pdo = getPDO();
@@ -216,7 +218,10 @@ function handleAuthLogin(): void
         // Não bloqueia login
     }
 
-    jsonResponse(authPublicUser($row), 200);
+    // A extensão Chrome salva este session_id em storage e reenvia via header X-Xaigoo-Session
+    $user = authPublicUser($row);
+    $user['sessionId'] = $sessionId;
+    jsonResponse($user, 200);
 }
 
 /**

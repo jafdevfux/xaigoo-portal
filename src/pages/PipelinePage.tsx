@@ -617,7 +617,7 @@ export default function PipelinePage() {
           <div className="space-y-1.5">
             <h1 className="text-2xl lg:text-3xl font-extrabold tracking-tight text-slate-900 font-display">Pipeline</h1>
             <p className="text-sm leading-relaxed text-slate-600 max-w-3xl">
-              Ficha Visual de Registro e Acompanhamento de Influenciadores — gerenciamento completo com Kanban.
+              Automação de leads
             </p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
