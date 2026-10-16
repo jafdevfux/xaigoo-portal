@@ -834,16 +834,17 @@ export default function PipelinePage() {
             <div className="hidden lg:block bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="w-full text-sm">
-                  <thead>
-                    <tr className="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-600">
-                      <th className="text-left px-4 py-3 whitespace-nowrap">Influenciador</th>
-                      <th className="text-left px-4 py-3 whitespace-nowrap">Audiência</th>
-                      <th className="text-left px-4 py-3 whitespace-nowrap">Status</th>
-                      <th className="text-left px-4 py-3 whitespace-nowrap">1º contato</th>
-                      <th className="text-left px-4 py-3 whitespace-nowrap">Check</th>
-                      <th className="text-right px-4 py-3 whitespace-nowrap">Ações</th>
-                    </tr>
-                  </thead>
+                    <thead>
+                      <tr className="bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-600">
+                        <th className="text-left px-4 py-3 whitespace-nowrap">Influenciador</th>
+                        <th className="text-left px-4 py-3 whitespace-nowrap">Audiência</th>
+                        <th className="text-left px-4 py-3 whitespace-nowrap">Status</th>
+                        <th className="text-left px-4 py-3 whitespace-nowrap">Tipo</th>
+                        <th className="text-left px-4 py-3 whitespace-nowrap">1º contato</th>
+                        <th className="text-left px-4 py-3 whitespace-nowrap">Check</th>
+                        <th classnavn-class="text-right px-4 py-3 whitespace-nowrap">Ações</th>
+                      </tr>
+                    </thead>
                   <tbody className="divide-y divide-slate-100">
                     {filteredRecords.map((rec) => {
                       const ss = getStatusStyle(rec.status);
@@ -892,6 +893,9 @@ export default function PipelinePage() {
                                 → {rec.nextAction}
                               </div>
                             )}
+                          </td>
+                          <td className="px-4 py-3 align-top">
+                            {rec.tipo || <span className="text-slate-400">—</span>}
                           </td>
                           <td className="px-4 py-3 align-top">
                             <label className="sr-only" htmlFor={`status-${rec.id}`}>Status de {rec.nameOrHandle}</label>
@@ -1396,7 +1400,21 @@ export default function PipelinePage() {
                     {RESPONSE_OPTIONS.map((r) => (<option key={r} value={r}>{r}</option>))}
                   </select>
                 </div>
-                {/* 9 e 10 — checkboxes */}
+                {/* 9. Tipo (Insiders / Motorista) */}
+                <div>
+                  <label htmlFor="f-tipo" className="block text-xs font-semibold text-slate-700 mb-1">9. Tipo (Insiders / Motorista)</label>
+                  <select
+                    id="f-tipo"
+                    value={formData.tipo}
+                    onChange={(e) => setFormData((p) => ({ ...p, tipo: e.target.value }))}
+                    className="w-full h-10 px-3 rounded-xl border border-slate-200 bg-white text-sm font-medium focus:outline-none focus:ring-2 focus:ring-violet-200 cursor-pointer"
+                  >
+                    <option value="">Selecione...</option>
+                    <option value="Insiders">Insiders</option>
+                    <option value="Motorista">Motorista</option>
+                  </select>
+                </div>
+                {/* 10 e 11 — checkboxes */}
                 <div className="flex flex-col gap-3 justify-end">
                   <label className="inline-flex items-center gap-2 text-sm font-medium text-slate-800 cursor-pointer select-none">
                     <input
