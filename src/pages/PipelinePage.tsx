@@ -164,6 +164,7 @@ const EMPTY_FORM: Omit<InfluencerRecord, 'id'> = {
   videosSent: false,
   nextAction: '',
   notes: '',
+  tipo: '',
 };
 
 function isValidDateYYYYMMDD(v: string) {
@@ -187,6 +188,7 @@ export default function PipelinePage() {
   const [platformFilter, setPlatformFilter] = useState<string>('TODOS');
   const [statusFilter, setStatusFilter] = useState<string>('TODOS');
   const [segmentationFilter, setSegmentationFilter] = useState<string>('TODOS');
+  const [tipoFilter, setTipoFilter] = useState<string>('TODOS');
   const [view, setView] = useState<ViewMode>('tabela');
 
   // CRUD UI
@@ -315,11 +317,12 @@ export default function PipelinePage() {
         if (segmentationFilter === 'LEVEL2' && r.segmentation_level !== 2) return false;
         if (segmentationFilter === 'NULL' && (r.segmentation_level !== null && r.segmentation_level !== undefined)) return false;
       }
+      if (tipoFilter !== 'TODOS' && r.tipo !== tipoFilter) return false;
       if (!q) return true;
       const hay = `${r.nameOrHandle} ${r.audienceType} ${r.nextAction} ${r.notes} ${r.platform} ${r.status}`.toLowerCase();
       return hay.includes(q);
     });
-  }, [records, search, platformFilter, statusFilter, segmentationFilter]);
+  }, [records, search, platformFilter, statusFilter, segmentationFilter, tipoFilter]);
 
   // Export CSV — todos 12 campos + headers pt-BR (espelha Chapter9)
   const handleExportCSV = useCallback(() => {
@@ -754,6 +757,21 @@ export default function PipelinePage() {
                 <option value="LEVEL1">Nível 1 (Forte aderência)</option>
                 <option value="LEVEL2">Nível 2 (Neutro/Fora do nicho)</option>
                 <option value="NULL">Sem classificação IA</option>
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" aria-hidden />
+            </div>
+            {/* Tipo (Insiders / Motorista) */}
+            <div className="relative">
+              <label htmlFor="pipeline-tipo" className="sr-only">Filtrar por tipo</label>
+              <select
+                id="pipeline-tipo"
+                value={tipoFilter}
+                onChange={(e) => setTipoFilter(e.target.value)}
+                className="h-10 pl-3 pr-8 rounded-xl border border-slate-200 bg-white text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-200 cursor-pointer min-w-[180px] appearance-none [-webkit-appearance:none] [-moz-appearance:none] [&::-ms-expand]:hidden"
+              >
+                <option value="TODOS">Todos os tipos</option>
+                <option value="Insiders">Insiders</option>
+                <option value="Motorista">Motorista</option>
               </select>
               <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" aria-hidden />
             </div>
