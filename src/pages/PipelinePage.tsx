@@ -120,6 +120,12 @@ const STATUS_STYLE: Record<InfluencerRecord['status'], { dot: string; badge: str
   'Sem resposta após acompanhamento': { dot: 'bg-zinc-400', badge: 'bg-zinc-100 text-zinc-700 border-zinc-200', border: 'border-zinc-200' },
 };
 
+// Fallback seguro para status desconhecido (evita crash no render)
+const DEFAULT_STATUS_STYLE = { dot: 'bg-gray-400', badge: 'bg-gray-100 text-gray-700 border-gray-200', border: 'border-gray-200' };
+function getStatusStyle(status: string) {
+  return STATUS_STYLE[status as InfluencerRecord['status']] ?? DEFAULT_STATUS_STYLE;
+}
+
 const PLATFORM_STYLE: Record<InfluencerRecord['platform'], string> = {
   'Instagram': 'bg-gradient-to-br from-pink-50 to-orange-50 text-pink-700 border-pink-200',
   'Grupo de Facebook': 'bg-blue-50 text-blue-700 border-blue-200',
@@ -127,7 +133,12 @@ const PLATFORM_STYLE: Record<InfluencerRecord['platform'], string> = {
   'TikTok': 'bg-zinc-900 text-white border-zinc-800',
 };
 
-function platformIcon(platform: InfluencerRecord['platform']) {
+const DEFAULT_PLATFORM_STYLE = 'bg-gray-50 text-gray-700 border-gray-200';
+function getPlatformStyle(platform: string) {
+  return PLATFORM_STYLE[platform as InfluencerRecord['platform']] ?? DEFAULT_PLATFORM_STYLE;
+}
+
+function platformIcon(platform: InfluencerRecord['platform'] | string) {
   if (platform === 'Instagram') return <Instagram className="w-3 h-3" aria-hidden />;
   if (platform === 'YouTube') return <Youtube className="w-3 h-3" aria-hidden />;
   if (platform === 'Grupo de Facebook') return <Facebook className="w-3 h-3" aria-hidden />;
@@ -175,6 +186,7 @@ export default function PipelinePage() {
   const [search, setSearch] = useState('');
   const [platformFilter, setPlatformFilter] = useState<string>('TODOS');
   const [statusFilter, setStatusFilter] = useState<string>('TODOS');
+  const [segmentationFilter, setSegmentationFilter] = useState<string>('TODOS');
   const [view, setView] = useState<ViewMode>('tabela');
 
   // CRUD UI
@@ -240,12 +252,34 @@ export default function PipelinePage() {
     }
   }, [pushToast]);
 
+  // Auto-refresh: busca novos registros a cada 5s para atualizar em tempo real
+  // quando a extensão do navegador salva novos leads no banco
+  const fetchRecordsSilent = useCallback(async () => {
+    try {
+      const list = await listInfluencers();
+      setRecords((prev) => {
+        // Só atualiza se houve mudança (evita re-render desnecessário)
+        if (JSON.stringify(prev) !== JSON.stringify(list)) {
+          return list;
+        }
+        return prev;
+      });
+    } catch {
+      // Silencioso: não mostra erro em polling automático
+    }
+  }, []);
+
   useEffect(() => {
     void fetchRecords();
     void fetchOnline();
-    const interval = setInterval(() => void fetchOnline(), 30_000);
-    return () => clearInterval(interval);
-  }, [fetchRecords, fetchOnline]);
+    // Polling de registros a cada 5s para atualização em tempo real
+    const recordsInterval = setInterval(() => void fetchRecordsSilent(), 5_000);
+    const onlineInterval = setInterval(() => void fetchOnline(), 30_000);
+    return () => {
+      clearInterval(recordsInterval);
+      clearInterval(onlineInterval);
+    };
+  }, [fetchRecords, fetchRecordsSilent, fetchOnline]);
 
   const [showOnlinePanel, setShowOnlinePanel] = useState(false);
 
@@ -276,11 +310,16 @@ export default function PipelinePage() {
     return records.filter((r) => {
       if (platformFilter !== 'TODOS' && r.platform !== platformFilter) return false;
       if (statusFilter !== 'TODOS' && r.status !== statusFilter) return false;
+      if (segmentationFilter !== 'TODOS') {
+        if (segmentationFilter === 'LEVEL1' && r.segmentation_level !== 1) return false;
+        if (segmentationFilter === 'LEVEL2' && r.segmentation_level !== 2) return false;
+        if (segmentationFilter === 'NULL' && (r.segmentation_level !== null && r.segmentation_level !== undefined)) return false;
+      }
       if (!q) return true;
       const hay = `${r.nameOrHandle} ${r.audienceType} ${r.nextAction} ${r.notes} ${r.platform} ${r.status}`.toLowerCase();
       return hay.includes(q);
     });
-  }, [records, search, platformFilter, statusFilter]);
+  }, [records, search, platformFilter, statusFilter, segmentationFilter]);
 
   // Export CSV — todos 12 campos + headers pt-BR (espelha Chapter9)
   const handleExportCSV = useCallback(() => {
@@ -702,6 +741,22 @@ export default function PipelinePage() {
               </select>
               <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" aria-hidden />
             </div>
+            {/* Nível de Segmentação IA */}
+            <div className="relative">
+              <label htmlFor="pipeline-segmentation" className="sr-only">Filtrar por nível IA</label>
+              <select
+                id="pipeline-segmentation"
+                value={segmentationFilter}
+                onChange={(e) => setSegmentationFilter(e.target.value)}
+                className="h-10 pl-3 pr-8 rounded-xl border border-slate-200 bg-white text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-violet-200 cursor-pointer min-w-[210px] appearance-none [-webkit-appearance:none] [-moz-appearance:none] [&::-ms-expand]:hidden"
+              >
+                <option value="TODOS">Todos níveis IA</option>
+                <option value="LEVEL1">Nível 1 (Forte aderência)</option>
+                <option value="LEVEL2">Nível 2 (Neutro/Fora do nicho)</option>
+                <option value="NULL">Sem classificação IA</option>
+              </select>
+              <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" aria-hidden />
+            </div>
             {/* Count */}
             <div className="inline-flex items-center justify-center h-10 px-3 rounded-xl bg-slate-900 text-white text-xs font-semibold tabular-nums shrink-0">
               {filteredRecords.length} fichas
@@ -773,7 +828,7 @@ export default function PipelinePage() {
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {filteredRecords.map((rec) => {
-                      const ss = STATUS_STYLE[rec.status];
+                      const ss = getStatusStyle(rec.status);
                       const isSelected = selectedId === rec.id;
                       return (
                         <tr
@@ -789,7 +844,7 @@ export default function PipelinePage() {
                                   {rec.nameOrHandle}
                                 </div>
                                 <div className="flex items-center gap-1.5 mt-1">
-                                  <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full border text-[11px] font-semibold ${PLATFORM_STYLE[rec.platform]}`}>
+                                  <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full border text-[11px] font-semibold ${getPlatformStyle(rec.platform)}`}>
                                     {platformIcon(rec.platform)}
                                     {rec.platform}
                                   </span>
@@ -837,6 +892,15 @@ export default function PipelinePage() {
                               ))}
                             </select>
                             <div className="mt-1 text-[11px] text-slate-500 font-mono">{rec.responseReceived}</div>
+                            {rec.segmentation_level !== null && rec.segmentation_level !== undefined && (
+                              <div className="mt-1 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold border ${
+                                rec.segmentation_level === 1
+                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                  : 'bg-amber-50 text-amber-700 border-amber-200'
+                              }">
+                                IA: {rec.segmentation_level}
+                              </div>
+                            )}
                           </td>
                           <td className="px-4 py-3 align-top whitespace-nowrap">
                             <span className="inline-flex items-center gap-1 text-xs font-mono text-slate-700">
@@ -901,7 +965,7 @@ export default function PipelinePage() {
             {/* Mobile cards — mesma ficha do Chapter9 refinada para produção */}
             <div className="lg:hidden grid gap-3">
               {filteredRecords.map((rec) => {
-                const ss = STATUS_STYLE[rec.status];
+                const ss = getStatusStyle(rec.status);
                 return (
                   <article
                     key={rec.id}
@@ -911,7 +975,7 @@ export default function PipelinePage() {
                     <div className="flex items-start justify-between gap-3">
                       <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2 text-xs text-slate-500">
-                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[11px] font-semibold ${PLATFORM_STYLE[rec.platform]}`}>
+                          <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[11px] font-semibold ${getPlatformStyle(rec.platform)}`}>
                             {platformIcon(rec.platform)}
                             {rec.platform}
                           </span>
@@ -919,6 +983,15 @@ export default function PipelinePage() {
                             <CalendarDays className="w-3 h-3" aria-hidden />
                             {rec.firstContactDate}
                           </span>
+                          {rec.segmentation_level !== null && rec.segmentation_level !== undefined && (
+                            <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold border ${
+                              rec.segmentation_level === 1
+                                ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                : 'bg-amber-50 text-amber-700 border-amber-200'
+                            }`}>
+                              IA: {rec.segmentation_level}
+                            </span>
+                          )}
                         </div>
                         <h3 className="mt-1 text-sm font-bold text-slate-900 font-display leading-snug break-words">{rec.nameOrHandle}</h3>
                         {rec.link && (
@@ -1026,7 +1099,7 @@ export default function PipelinePage() {
                   const group: KanbanGroup = STATUS_GROUP[colStatus];
                   const accent = GROUP_ACCENT[group];
                   const isDragOver = dragOverStatus === colStatus;
-                  const style = STATUS_STYLE[colStatus];
+                  const style = getStatusStyle(colStatus);
                   return (
                     <section
                       key={colStatus}
@@ -1084,10 +1157,21 @@ export default function PipelinePage() {
                                 <h4 className="text-[13px] font-bold text-slate-900 leading-snug line-clamp-2 flex-1" title={rec.nameOrHandle}>
                                   {rec.nameOrHandle}
                                 </h4>
-                                <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full border text-[10px] font-bold shrink-0 ${PLATFORM_STYLE[rec.platform]}`}>
-                                  {platformIcon(rec.platform)}
-                                  <span className="hidden sm:inline">{rec.platform === 'Grupo de Facebook' ? 'FB Grupo' : rec.platform}</span>
-                                </span>
+                                <div className="flex items-center gap-1.5">
+                                  <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full border text-[10px] font-bold shrink-0 ${getPlatformStyle(rec.platform)}`}>
+                                    {platformIcon(rec.platform)}
+                                    <span className="hidden sm:inline">{rec.platform === 'Grupo de Facebook' ? 'FB Grupo' : rec.platform}</span>
+                                  </span>
+                                  {rec.segmentation_level !== null && rec.segmentation_level !== undefined && (
+                                    <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold border shrink-0 ${
+                                      rec.segmentation_level === 1
+                                        ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                        : 'bg-amber-50 text-amber-700 border-amber-200'
+                                    }`}>
+                                      IA: {rec.segmentation_level}
+                                    </span>
+                                  )}
+                                </div>
                               </div>
                               <div className="mt-1.5 text-xs text-slate-600 line-clamp-1" title={rec.audienceType}>
                                 {rec.audienceType || 'Sem audiência descrita'}

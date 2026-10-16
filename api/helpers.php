@@ -82,7 +82,7 @@ function enableCors(): void
     }
 
     header('Access-Control-Allow-Methods: GET, POST, PUT, PATCH, DELETE, OPTIONS');
-    header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, Cookie, Accept, Origin');
+    header('Access-Control-Allow-Headers: Content-Type, Authorization, X-Requested-With, Cookie, Accept, Origin, X-Xaigoo-Session');
     header('Access-Control-Expose-Headers: Content-Type, Authorization');
     header('Access-Control-Max-Age: 86400');
 
@@ -198,6 +198,11 @@ function isXaigooEmail(string $email): bool
  * Usa session_name('xaigoo_session'), httponly, SameSite Lax, lifetime 0.
  * Secure = true apenas em production (APP_ENV === 'production').
  * Idempotente: se sessão já ativa, não faz nada.
+ *
+ * EXTENSÃO CHROME (MV3): O background service worker NÃO consegue enviar
+ * o header Cookie via fetch() (é forbidden header). Por isso aceita o
+ * header customizado X-Xaigoo-Session como alternativa. Quando presente,
+ * usa session_id() para restaurar a sessão correspondente.
  */
 function ensureSessionStarted(): void
 {
@@ -218,6 +223,13 @@ function ensureSessionStarted(): void
         'httponly' => true,
         'samesite' => $isProduction ? 'None' : 'Lax',
     ]);
+
+    // Extensão Chrome envia session ID via header customizado
+    // (fetch() no service worker não pode enviar Cookie header)
+    $extSessionId = $_SERVER['HTTP_X_XAIGOO_SESSION'] ?? '';
+    if ($extSessionId !== '' && preg_match('/^[a-zA-Z0-9,-]{22,128}$/', $extSessionId)) {
+        session_id($extSessionId);
+    }
 
     session_start();
 }
