@@ -110,34 +110,36 @@ export const STEP1_FLOW_STAGES: Step1FlowStage[] = [
   },
 ];
 
-export interface InfluencerRecord {
-  id: string;
-  nameOrHandle: string;
-  platform: 'Instagram' | 'Grupo de Facebook' | 'YouTube' | 'TikTok';
-  link: string;
-  audienceType: string;
-  justification: string;
-  firstContactDate: string;
-  status:
-    | 'A pesquisar'
-    | 'Selecionado'
-    | 'Primeiro contato enviado'
-    | 'Aguardando resposta'
-    | 'Aguardando sistema IOS'
-    | 'Autorizou o envio'
-    | 'Material enviado'
-    | 'Em avaliação'
-    | 'Parceria aprovada'
-    | 'Em execução'
-    | 'Encerrado'
-    | 'Não interessado'
-    | 'Sem resposta após acompanhamento';
-  responseReceived: 'Pendente' | 'Positiva (Autorizou)' | 'Com dúvidas' | 'Recusou' | 'Sem resposta';
-  proposalSent: boolean;
-  videosSent: boolean;
-  nextAction: string;
-  notes: string;
-  segmentation_level?: number | null; // 1 | 2 | null (IA off)
+   id: string;
+   nameOrHandle: string;
+   platform: 'Instagram' | 'Grupo de Facebook' | 'YouTube' | 'TikTok';
+   link: string;
+   audienceType: string;
+   justification: string;
+   firstContactDate: string;
+   status:
+     | 'A pesquisar'
+     | 'Selecionado'
+     | 'Primeiro contato enviado'
+     | 'Aguardando resposta'
+     | 'Aguardando sistema IOS'
+     | 'Autorizou o envio'
+     | 'Material enviado'
+     | 'Em avaliação'
+     | 'Parceria aprovada'
+     | 'Em execução'
+     | 'Encerrado'
+     | 'Não interessado'
+     | 'Sem resposta após acompanhamento';
+   responseReceived: 'Pendente' | 'Positiva (Autorizou)' | 'Com dúvidas' | 'Recusou' | 'Sem resposta';
+   proposalSent: boolean;
+   videosSent: boolean;
+   nextAction: string;
+   notes: string;
+   segmentation_level?: number | null; // 1 | 2 | null (IA off)
+   tipo?: string; // 'Insiders' ou 'Motorista' (categoria do lead)
+   created_at?: string;
+   updated_at?: string;
 }
 
 export const INITIAL_INFLUENCER_RECORDS: InfluencerRecord[] = [

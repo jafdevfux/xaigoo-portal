@@ -178,6 +178,7 @@ export type CreateInfluencerPayload = {
   videosSent?: boolean;
   nextAction?: string;
   notes?: string;
+  tipo?: string; // 'Insiders' ou 'Motorista'
 };
 
 export type UpdateInfluencerPayload = Partial<CreateInfluencerPayload>;

@@ -64,7 +64,7 @@ const PENDING_VALIDATION_STATUSES = [
 
 // Mapeamento camelCase (frontend) -> snake_case (banco) para influencers
 const INFLUENCER_FIELD_MAP = [
-    'nameOrHandle'     => 'name_or_handle',
+  'nameOrHandle'     => 'name_or_handle',
     'platform'         => 'platform',
     'link'             => 'link',
     'audienceType'     => 'audience_type',
@@ -76,7 +76,8 @@ const INFLUENCER_FIELD_MAP = [
     'videosSent'       => 'videos_sent',
     'nextAction'       => 'next_action',
     'notes'            => 'notes',
-];
+    'tipo'             => 'tipo',
+  ];
 
 // Fallback estático para flow-stages (espelha STEP1_FLOW_STAGES) quando tabela não existir
 const FALLBACK_FLOW_STAGES = [
@@ -274,6 +275,7 @@ if (($segments[0] ?? null) === 'influencers') {
                 'videos_sent' => $data['videos_sent'] ?? 0,
                 'next_action' => $data['next_action'] ?? null,
                 'notes' => $data['notes'] ?? null,
+                'tipo' => $data['tipo'] ?? null,
                 'created_at' => $now,
                 'updated_at' => $now,
             ];
