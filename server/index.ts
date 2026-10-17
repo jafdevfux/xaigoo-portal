@@ -118,6 +118,8 @@ export interface InfluencerRecord {
   videosSent: boolean;
   nextAction: string;
   notes: string;
+  hasMessageButton?: boolean | null; // 1=tem botão, 0=não tem, NULL=não verificado
+  lastVisibilityCheck?: string | null; // YYYY-MM-DD HH:MM:SS
 }
 
 export type DevInfluencer = InfluencerRecord & { created_at: string; updated_at: string };
@@ -233,6 +235,8 @@ function normalizeInfluencerRow(row: any): DevInfluencer {
   const firstContactDate = formatDateYYYYMMDD(row.first_contact_date ?? row.firstContactDate ?? '');
   const proposalSentRaw = row.proposal_sent ?? row.proposalSent;
   const videosSentRaw = row.videos_sent ?? row.videosSent;
+  const hasMessageButtonRaw = row.has_message_button ?? row.hasMessageButton;
+  const lastVisibilityCheckRaw = row.last_visibility_check ?? row.lastVisibilityCheck;
   const toBool = (val: unknown): boolean => {
     if (typeof val === 'boolean') return val;
     if (typeof val === 'number') return val !== 0;
@@ -247,12 +251,14 @@ function normalizeInfluencerRow(row: any): DevInfluencer {
     audienceType: String(row.audience_type ?? row.audienceType ?? ''),
     justification: String(row.justification ?? ''),
     firstContactDate,
-    status: (row.status as InfluencerStatus) ?? 'A pesquisar',
+    status: (row.status as InfluencerStatus) ?? 'A pesicionar',
     responseReceived: (row.response_received ?? row.responseReceived ?? 'Pendente') as InfluencerResponse,
     proposalSent: toBool(proposalSentRaw),
     videosSent: toBool(videosSentRaw),
     nextAction: String(row.next_action ?? row.nextAction ?? ''),
     notes: String(row.notes ?? ''),
+    hasMessageButton: hasMessageButtonRaw != null ? toBool(hasMessageButtonRaw) : null,
+    lastVisibilityCheck: lastVisibilityCheckRaw != null ? formatDateTime(lastVisibilityCheckRaw) : null,
     created_at: formatDateTime(row.created_at ?? row.createdAt ?? ''),
     updated_at: formatDateTime(row.updated_at ?? row.updatedAt ?? ''),
   };
@@ -689,6 +695,111 @@ app.patch('/api/influencers/:id/status', requireAuth, async (req, res) => {
   list[idx] = { ...list[idx], status, updated_at: now };
   saveDevInfluencers(list);
   res.json(list[idx]);
+});
+
+// PATCH /api/influencers/:id/visibility — atualiza resultado da verificação de visibilidade
+app.patch('/api/influencers/:id/visibility', requireAuth, async (req, res) => {
+  const id = String(req.params.id);
+  const body = req.body ?? {};
+  const hasMessageButton = body.hasMessageButton;
+  if (hasMessageButton !== null && hasMessageButton !== undefined && typeof hasMessageButton !== 'boolean') {
+    return res.status(422).json({ error: 'hasMessageButton deve ser boolean ou null.' });
+  }
+  const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
+
+  if (dbAvailable && pool) {
+    try {
+      const [rows] = await pool.query('SELECT * FROM influencers WHERE id = ? LIMIT 1', [id]) as any;
+      if (!rows[0]) return res.status(404).json({ error: 'Influenciador não encontrado.' });
+      await pool.query(
+        'UPDATE influencers SET has_message_button=?, last_visibility_check=? WHERE id=?',
+        [hasMessageButton != null ? (hasMessageButton ? 1 : 0) : null, now, id]
+      );
+      const [updated] = await pool.query('SELECT * FROM influencers WHERE id = ? LIMIT 1', [id]) as any;
+      return res.json(normalizeInfluencerRow(updated[0]));
+    } catch (e: any) {
+      if (e.code === 'ETIMEDOUT' || e.code === 'ECONNREFUSED' || e.code === 'PROTOCOL_CONNECTION_LOST') {
+        console.warn('[influencers:patch-visibility mysql fallback]', e.code);
+        dbAvailable = false;
+      } else {
+        console.error('[influencers:patch-visibility mysql]', e.code, e.message);
+        return res.status(500).json({ error: 'Erro ao atualizar visibilidade.' });
+      }
+    }
+  }
+
+  const list = loadDevInfluencers();
+  const idx = list.findIndex(r => r.id === id);
+  if (idx === -1) return res.status(404).json({ error: 'Influenciador não encontrado.' });
+  list[idx] = { ...list[idx], hasMessageButton: hasMessageButton != null ? Boolean(hasMessageButton) : null, lastVisibilityCheck: now, updated_at: now };
+  saveDevInfluencers(list);
+  res.json(list[idx]);
+});
+
+// POST /api/profile/verify-visibility — verifica se perfil tem botão de mensagem
+app.post('/api/profile/verify-visibility', requireAuth, async (req, res) => {
+  const { profileUrl } = req.body ?? {};
+  if (!profileUrl || typeof profileUrl !== 'string') {
+    return res.status(422).json({ error: 'profileUrl é obrigatório.' });
+  }
+
+  try {
+    // Fazer fetch para o perfil do Instagram
+    const response = await fetch(profileUrl, {
+      method: 'GET',
+      headers: {
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+        'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+        'Accept-Language': 'pt-BR,pt;q=0.9,en;q=0.8',
+      },
+      redirect: 'follow',
+      signal: AbortSignal.timeout(10000), // 10 segundos timeout
+    });
+
+    let hasMessageButton = false;
+    if (response.ok) {
+      const html = await response.text();
+      // Verificar se contém botão "Enviar mensagem" ou "Send message"
+      hasMessageButton = 
+        html.includes('enviar mensagem') ||
+        html.includes('send message') ||
+        html.includes('Enviar mensagem') ||
+        html.includes('Send message') ||
+        html.includes('/messages/') ||
+        html.includes('/compose/');
+    }
+
+    // Salvar no banco de dados
+    const visibilityId = 'vis-' + Math.random().toString(36).slice(2, 10) + Date.now().toString(36);
+    const now = new Date().toISOString().slice(0, 19).replace('T', ' ');
+
+    if (dbAvailable && pool) {
+      try {
+        await pool.query(
+          `INSERT INTO profile_visibilities (id, profile_url, is_visible, checked_at, status) 
+           VALUES (?, ?, ?, ?, 'completed')`,
+          [visibilityId, profileUrl, hasMessageButton, now]
+        );
+      } catch (e: any) {
+        console.error('[profile:verify-visibility insert]', e.code, e.message);
+        // Não falhar a resposta por erro de insert no log
+      }
+    }
+
+    res.json({ 
+      success: true, 
+      hasMessageButton, 
+      profileUrl,
+      timestamp: now 
+    });
+  } catch (error: any) {
+    console.error('[profile:verify-visibility]', error.message);
+    res.status(500).json({ 
+      success: false, 
+      error: 'Erro ao verificar perfil',
+      hasMessageButton: false 
+    });
+  }
 });
 
 // DELETE /api/influencers/:id
