@@ -7,7 +7,7 @@
     "dev": "concurrently -k -n web,api -c violet,cyan \"vite --port=3000 --host=0.0.0.0\" \"tsx server/index.ts\"",
     "dev:web": "vite --port=3000 --host=0.0.0.0",
     "dev:api": "tsx server/index.ts",
-    "build": "vite build",
+    "build": "vite build && cp public/xaigoo-extractor.zip dist/xaigoo-extractor.zip",
     "preview": "vite preview",
     "clean": "rm -rf dist server.js",
     "lint": "tsc --noEmit"
@@ -41,7 +41,7 @@
     "esbuild": "^0.28.0",
     "tailwindcss": "^4.3.3",
     "tsx": "^4.21.0",
-    "typescript": "^7.0.2"
+    "typescript": "^7.0.0"
   },
   "description": "<div align=\"center\"> <img width=\"1200\" height=\"475\" alt=\"GHBanner\" src=\"https://ai.google.dev/static/site-assets/images/share-ais-513315318.png\" /> </div>",
   "main": "index.js",

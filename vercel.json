@@ -2,8 +2,10 @@
   "framework": "vite",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "redirects": [
+    { "source": "/xaigoo-extractor.zip", "destination": "/xaigoo-extractor.zip", "permanent": false }
+  ],
   "rewrites": [
-    { "source": "/xaigoo-extractor.zip", "destination": "/xaigoo-extractor.zip" },
     { "source": "/(.*)", "destination": "/index.html" }
   ],
   "headers": [
