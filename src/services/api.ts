@@ -161,6 +161,8 @@ export type InfluencerRecord = {
   nextAction: string;
   notes: string;
   segmentation_level?: number | null; // 1 | 2 | null (IA off)
+  has_message_button?: boolean | null; // 1=tem botão, 0=não tem, NULL=não verificado
+  last_visibility_check?: string | null; // YYYY-MM-DD HH:MM:SS
   created_at?: string;
   updated_at?: string;
 };
@@ -218,6 +220,16 @@ export function updateInfluencerStatus(
   return fetchJson<InfluencerRecord>(`/influencers/${encodeURIComponent(id)}`, {
     method: 'PUT',
     body: JSON.stringify({ status }),
+  });
+}
+
+export function updateInfluencerVisibility(
+  id: string,
+  hasMessageButton: boolean | null
+): Promise<InfluencerRecord> {
+  return fetchJson<InfluencerRecord>(`/influencers/${encodeURIComponent(id)}/visibility`, {
+    method: 'PATCH',
+    body: JSON.stringify({ hasMessageButton }),
   });
 }
 

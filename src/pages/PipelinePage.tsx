@@ -28,6 +28,10 @@ import {
   Loader2,
   Eye,
   EyeOff,
+  Mail,
+  Lock,  // Adicionar Lock para perfis fechados
+  Shield,
+  RefreshCw,
 } from 'lucide-react';
 import type { InfluencerRecord } from '../data/operationalData';
 import { INITIAL_INFLUENCER_RECORDS } from '../data/operationalData';
@@ -1082,6 +1086,13 @@ export default function PipelinePage() {
                         </span>
                         <span className="text-slate-300">·</span>
                         <span className="text-xs text-violet-700 font-medium line-clamp-1">→ {rec.nextAction || 'Sem próxima ação'}</span>
+                        {/* Adicionar ícone Lock para perfis fechados */}
+                        {rec.has_message_button === false && (
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-red-50 text-red-700 border border-red-200 text-[10px] font-bold">
+                            <Lock className="w-3 h-3" aria-hidden />
+                            Fechado
+                          </span>
+                        )}
                       </div>
                     </div>
 
