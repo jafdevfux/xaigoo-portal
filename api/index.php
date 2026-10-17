@@ -409,6 +409,93 @@ if (($segments[0] ?? null) === 'influencers') {
         }
     }
 
+    // PATCH /api/influencers/{id}/visibility — atualiza resultado da verificação de visibilidade
+    if ($hasId && $method === 'PATCH' && $segments[2] === 'visibility') {
+        $input = getJsonInput();
+        $hasMessageButton = $input['hasMessageButton'] ?? null;
+        if ($hasMessageButton !== null && $hasMessageButton !== '' && !is_bool($hasMessageButton)) {
+            errorResponse('hasMessageButton deve ser boolean ou null.', 422);
+        }
+        try {
+            $pdo = getPDO();
+            $chk = $pdo->prepare('SELECT id FROM influencers WHERE id = :id');
+            $chk->execute([':id' => $id]);
+            if (!$chk->fetch()) {
+                errorResponse('Influenciador não encontrado', 404);
+            }
+            $val = $hasMessageButton === null ? null : ($hasMessageButton ? 1 : 0);
+            $now = date('Y-m-d H:i:s');
+            $upd = $pdo->prepare('UPDATE influencers SET has_message_button = :val, last_visibility_check = :now WHERE id = :id');
+            $upd->execute([':val' => $val, ':now' => $now, ':id' => $id]);
+            $sel = $pdo->prepare('SELECT * FROM influencers WHERE id = :id');
+            $sel->execute([':id' => $id]);
+            $row = $sel->fetch();
+            jsonResponse(rowToCamel($row));
+        } catch (PDOException $e) {
+            errorResponse('Erro ao atualizar visibilidade', 500);
+        }
+    }
+
+    // POST /api/profile/verify-visibility — verifica se perfil Instagram tem botão de mensagem
+    if (($segments[0] ?? null) === 'profile' && $segments[1] === 'verify-visibility' && $method === 'POST') {
+        $input = getJsonInput();
+        $profileUrl = trim((string) ($input['profileUrl'] ?? $input['profile_url'] ?? ''));
+        if ($profileUrl === '') {
+            errorResponse('profileUrl é obrigatório.', 422);
+        }
+        try {
+            $ch = curl_init($profileUrl);
+            curl_setopt_array($ch, [
+                CURLOPT_RETURNTRANSFER => true,
+                CURLOPT_TIMEOUT => 10,
+                CURLOPT_CONNECTTIMEOUT => 5,
+                CURLOPT_USERAGENT => 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                CURLOPT_FOLLOWLOCATION => true,
+                CURLOPT_SSL_VERIFYPEER => true,
+            ]);
+            $html = curl_exec($ch);
+            $httpCode = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+            $curlError = curl_error($ch);
+            curl_close($ch);
+
+            $hasMessageButton = false;
+            if ($curlError === '' && $httpCode >= 200 && $httpCode < 400 && is_string($html)) {
+                $hasMessageButton =
+                    stripos($html, 'send message') !== false ||
+                    stripos($html, 'enviar mensagem') !== false ||
+                    stripos($html, '/messages/') !== false ||
+                    stripos($html, '/compose/') !== false;
+            }
+
+            // Salvar log na tabela profile_visibilities (se existir)
+            try {
+                $pdo = getPDO();
+                $visId = 'vis-' . uniqid();
+                $stmt = $pdo->prepare(
+                    'INSERT INTO profile_visibilities (id, profile_url, is_visible, checked_at, status) VALUES (:id, :url, :vis, :now, :status)'
+                );
+                $stmt->execute([
+                    ':id' => $visId,
+                    ':url' => $profileUrl,
+                    ':vis' => $hasMessageButton ? 1 : 0,
+                    ':now' => date('Y-m-d H:i:s'),
+                    ':status' => 'completed',
+                ]);
+            } catch (PDOException) {
+                // Tabela pode não existir — não bloqueia a resposta
+            }
+
+            jsonResponse([
+                'success' => true,
+                'hasMessageButton' => $hasMessageButton,
+                'profileUrl' => $profileUrl,
+                'timestamp' => date('Y-m-d H:i:s'),
+            ]);
+        } catch (Throwable $e) {
+            errorResponse('Erro ao verificar perfil', 500);
+        }
+    }
+
     // Método não permitido para /influencers
     errorResponse('Method Not Allowed', 405);
 }

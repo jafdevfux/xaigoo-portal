@@ -904,16 +904,16 @@ export default function PipelinePage() {
                           </td>
                           <td className="px-4 py-3 align-top">
                             <div className="flex flex-col items-center gap-1" title={
-                              rec.has_message_button === true ? 'Perfil aberto — botão de mensagem disponível' :
-                              rec.has_message_button === false ? 'Perfil fechado — conta privada' :
+                              rec.hasMessageButton === true ? 'Perfil aberto — botão de mensagem disponível' :
+                              rec.hasMessageButton === false ? 'Perfil fechado — conta privada' :
                               'Não verificado — use o botão Verificar'
                             }>
-                              {rec.has_message_button === null || rec.has_message_button === undefined ? (
+                              {rec.hasMessageButton === null || rec.hasMessageButton === undefined ? (
                                 <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200 text-[10px] font-bold">
                                   <Clock3 className="w-3 h-3" aria-hidden />
                                   ?
                                 </div>
-                              ) : rec.has_message_button === true ? (
+                              ) : rec.hasMessageButton === true ? (
                                 <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold">
                                   <Mail className="w-3 h-3" aria-hidden />
                                   Aberto
@@ -1111,8 +1111,14 @@ export default function PipelinePage() {
                         </span>
                         <span className="text-slate-300">·</span>
                         <span className="text-xs text-violet-700 font-medium line-clamp-1">→ {rec.nextAction || 'Sem próxima ação'}</span>
-                        {/* Adicionar ícone Lock para perfis fechados */}
-                        {rec.has_message_button === false && (
+                        {/* Ícones de visibilidade do perfil */}
+                        {rec.hasMessageButton === true && (
+                          <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold">
+                            <Mail className="w-3 h-3" aria-hidden />
+                            Aberto
+                          </span>
+                        )}
+                        {rec.hasMessageButton === false && (
                           <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-red-50 text-red-700 border border-red-200 text-[10px] font-bold">
                             <Lock className="w-3 h-3" aria-hidden />
                             Fechado

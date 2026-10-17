@@ -161,8 +161,8 @@ export type InfluencerRecord = {
   nextAction: string;
   notes: string;
   segmentation_level?: number | null; // 1 | 2 | null (IA off)
-  has_message_button?: boolean | null; // 1=tem botão, 0=não tem, NULL=não verificado
-  last_visibility_check?: string | null; // YYYY-MM-DD HH:MM:SS
+  hasMessageButton?: boolean | null; // true=tem botão, false=não tem, null=não verificado
+  lastVisibilityCheck?: string | null; // YYYY-MM-DD HH:MM:SS
   created_at?: string;
   updated_at?: string;
 };

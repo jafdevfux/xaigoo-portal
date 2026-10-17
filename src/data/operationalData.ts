@@ -138,6 +138,8 @@ export interface InfluencerRecord {
    nextAction: string;
    notes: string;
    segmentation_level?: number | null; // 1 | 2 | null (IA off)
+   hasMessageButton?: boolean | null; // true=aberto, false=fechado, null=não verificado
+   lastVisibilityCheck?: string | null; // YYYY-MM-DD HH:MM:SS
    tipo?: string; // 'Insiders' ou 'Motorista' (categoria do lead)
    created_at?: string;
    updated_at?: string;

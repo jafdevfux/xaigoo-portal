@@ -165,17 +165,17 @@ function camelToSnake(string $camel): string
  * @return array<string,mixed>
  */
 function rowToCamel(array $row): array
-{
-    $out = [];
-    foreach ($row as $k => $v) {
-        // Booleans: proposal_sent / videos_sent são TINYINT(1) no banco
-        if (in_array($k, ['proposal_sent', 'videos_sent'], true)) {
-            $v = (bool) $v;
+    {
+        $out = [];
+        foreach ($row as $k => $v) {
+            // Booleans: proposal_sent / videos_sent / has_message_button são TINYINT(1) no banco
+            if (in_array($k, ['proposal_sent', 'videos_sent', 'has_message_button'], true)) {
+                $v = $v === null ? null : (bool) $v;
+            }
+            $out[snakeToCamel((string) $k)] = $v;
         }
-        $out[snakeToCamel((string) $k)] = $v;
+        return $out;
     }
-    return $out;
-}
 
 // ---------------------------------------------------------------------------
 // Auth — domínio restrito + sessão PHP

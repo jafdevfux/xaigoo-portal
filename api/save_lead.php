@@ -89,6 +89,7 @@ $input = getJsonInput();
 $username = trim((string) ($input['username'] ?? ''));
 $profileUrl = trim((string) ($input['profile_url'] ?? ''));
 $aiEnabled = isset($input['ai_enabled']) ? (bool) $input['ai_enabled'] : false;
+$hasMessageButton = isset($input['has_message_button']) ? ($input['has_message_button'] === null ? null : (bool) $input['has_message_button']) : null;
 
 // Validações básicas
 if ($username === '') {
@@ -156,6 +157,8 @@ try {
         'next_action' => '',
         'notes' => '',
         'segmentation_level' => $segmentationLevel,
+        'has_message_button' => $hasMessageButton === null ? null : ($hasMessageButton ? 1 : 0),
+        'last_visibility_check' => $hasMessageButton !== null ? $now : null,
         'created_by' => $sessionId,
         'created_at' => $now,
         'updated_at' => $now,
