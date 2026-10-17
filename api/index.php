@@ -724,7 +724,7 @@ if (($segments[0] ?? null) === 'pending-items') {
 // ---------------------------------------------------------------------------
 // Extensão Chrome — download
 // ---------------------------------------------------------------------------
-if (($segments[0] ?? null) === 'extension' && $segments[1] === 'xaigoo-extractor.zip' && $method === 'GET') {
+if (($segments[0] ?? null) === 'download-extension' && $method === 'GET') {
     $zipPath = __DIR__ . '/xaigoo-extractor.zip';
     if (!file_exists($zipPath)) {
         errorResponse('Extensão não disponível.', 404);

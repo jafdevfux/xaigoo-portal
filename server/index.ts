@@ -833,7 +833,7 @@ const PORT = Number(process.env.API_PORT || 3001);
 await initDb();
 
 // Servir extensão para download
-app.get('/extension/xaigoo-extractor.zip', (req, res) => {
+app.get('/api/download-extension', (req, res) => {
   const zipPath = path.join(__dirname, '..', 'xaigoo-extractor.zip');
   if (!fs.existsSync(zipPath)) {
     return res.status(404).json({ error: 'Extensão não disponível no momento.' });

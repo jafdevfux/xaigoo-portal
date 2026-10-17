@@ -23,6 +23,10 @@ export default defineConfig(() => {
           target: 'http://localhost:3001',
           changeOrigin: true,
         },
+        '/extension/xaigoo-extractor.zip': {
+          target: 'http://localhost:3001',
+          changeOrigin: true,
+        },
       },
     },
   };
