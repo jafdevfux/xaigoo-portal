@@ -2,5 +2,8 @@
   "framework": "vite",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
-  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
+  "rewrites": [
+    { "source": "/extension/xaigoo-extractor.zip", "destination": "/xaigoo-extractor.zip" },
+    { "source": "/(.*)", "destination": "/index.html" }
+  ]
 }

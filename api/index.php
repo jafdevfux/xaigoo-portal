@@ -722,6 +722,22 @@ if (($segments[0] ?? null) === 'pending-items') {
 }
 
 // ---------------------------------------------------------------------------
+// Extensão Chrome — download
+// ---------------------------------------------------------------------------
+if (($segments[0] ?? null) === 'extension' && $segments[1] === 'xaigoo-extractor.zip' && $method === 'GET') {
+    $zipPath = __DIR__ . '/xaigoo-extractor.zip';
+    if (!file_exists($zipPath)) {
+        errorResponse('Extensão não disponível.', 404);
+    }
+    header('Content-Type: application/zip');
+    header('Content-Disposition: attachment; filename="xaigoo-extractor.zip"');
+    header('Content-Length: ' . filesize($zipPath));
+    header('Cache-Control: no-cache');
+    readfile($zipPath);
+    exit;
+}
+
+// ---------------------------------------------------------------------------
 // Nenhuma rota casada → 404
 // ---------------------------------------------------------------------------
 errorResponse('Not Found', 404);

@@ -831,6 +831,19 @@ app.delete('/api/influencers/:id', requireAuth, async (req, res) => {
 
 const PORT = Number(process.env.API_PORT || 3001);
 await initDb();
+
+// Servir extensão para download
+app.get('/extension/xaigoo-extractor.zip', (req, res) => {
+  const zipPath = path.join(__dirname, '..', 'xaigoo-extractor.zip');
+  if (!fs.existsSync(zipPath)) {
+    return res.status(404).json({ error: 'Extensão não disponível no momento.' });
+  }
+  res.setHeader('Content-Type', 'application/zip');
+  res.setHeader('Content-Disposition', 'attachment; filename="xaigoo-extractor.zip"');
+  res.setHeader('Cache-Control', 'no-cache');
+  fs.createReadStream(zipPath).pipe(res);
+});
+
 const server = app.listen(PORT, '0.0.0.0', () => {
   console.log(`[api] dev server em http://localhost:${PORT} — modo ${dbAvailable ? 'MySQL remoto' : 'arquivo local (MySQL indisponível — .dev-users.json + .dev-influencers.json)'} — CORS 3000`);
   if (!dbAvailable) console.log('[api] Dica: em portal.xaigoo.app a HomeHost usa DB_HOST=localhost e o MySQL funcionará normalmente. Para liberar remoto, verifique firewall da hospedagem na porta 3306.');

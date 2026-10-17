@@ -675,6 +675,15 @@ export default function PipelinePage() {
               <Plus className="w-4 h-4" aria-hidden />
               Nova ficha
             </button>
+            <a
+              href="/extension/xaigoo-extractor.zip"
+              download="xaigoo-extractor.zip"
+              className="inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:bg-emerald-800 text-white text-[13px] font-semibold shadow-sm transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-300 focus-visible:ring-offset-2"
+              title="Baixar extensão Xaigoo Extractor para Chrome"
+            >
+              <Download className="w-4 h-4" aria-hidden />
+              Baixar Extensão
+            </a>
             <button
               onClick={handleExportCSV}
               className="inline-flex items-center justify-center gap-1.5 h-10 px-4 rounded-xl bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-[13px] font-semibold shadow-sm transition-colors cursor-pointer focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-violet-200"
