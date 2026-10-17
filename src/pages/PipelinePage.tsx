@@ -844,6 +844,7 @@ export default function PipelinePage() {
                         <th className="text-left px-4 py-3 whitespace-nowrap">Audiência</th>
                         <th className="text-left px-4 py-3 whitespace-nowrap">Status</th>
                         <th className="text-left px-4 py-3 whitespace-nowrap">Tipo</th>
+                        <th className="text-left px-4 py-3 whitespace-nowrap">Visibilidade</th>
                         <th className="text-left px-4 py-3 whitespace-nowrap">1º contato</th>
                         <th className="text-left px-4 py-3 whitespace-nowrap">Check</th>
                         <th classnavn-class="text-right px-4 py-3 whitespace-nowrap">Ações</th>
@@ -900,6 +901,30 @@ export default function PipelinePage() {
                           </td>
                           <td className="px-4 py-3 align-top">
                             {rec.tipo || <span className="text-slate-400">—</span>}
+                          </td>
+                          <td className="px-4 py-3 align-top">
+                            <div className="flex flex-col items-center gap-1" title={
+                              rec.has_message_button === true ? 'Perfil aberto — botão de mensagem disponível' :
+                              rec.has_message_button === false ? 'Perfil fechado — conta privada' :
+                              'Não verificado — use o botão Verificar'
+                            }>
+                              {rec.has_message_button === null || rec.has_message_button === undefined ? (
+                                <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-slate-100 text-slate-500 border border-slate-200 text-[10px] font-bold">
+                                  <Clock3 className="w-3 h-3" aria-hidden />
+                                  ?
+                                </div>
+                              ) : rec.has_message_button === true ? (
+                                <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-[10px] font-bold">
+                                  <Mail className="w-3 h-3" aria-hidden />
+                                  Aberto
+                                </div>
+                              ) : (
+                                <div className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full bg-red-50 text-red-700 border border-red-200 text-[10px] font-bold">
+                                  <Lock className="w-3 h-3" aria-hidden />
+                                  Fechado
+                                </div>
+                              )}
+                            </div>
                           </td>
                           <td className="px-4 py-3 align-top">
                             <label className="sr-only" htmlFor={`status-${rec.id}`}>Status de {rec.nameOrHandle}</label>
