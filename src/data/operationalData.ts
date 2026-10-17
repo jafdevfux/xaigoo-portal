@@ -110,8 +110,9 @@ export const STEP1_FLOW_STAGES: Step1FlowStage[] = [
   },
 ];
 
-   id: string;
-   nameOrHandle: string;
+export interface InfluencerRecord {
+  id: string;
+  nameOrHandle: string;
    platform: 'Instagram' | 'Grupo de Facebook' | 'YouTube' | 'TikTok';
    link: string;
    audienceType: string;
