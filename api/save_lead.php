@@ -156,6 +156,7 @@ try {
         'videos_sent' => 0,
         'next_action' => '',
         'notes' => '',
+        'tipo' => 'Motorista',
         'segmentation_level' => $segmentationLevel,
         'has_message_button' => $hasMessageButton === null ? null : ($hasMessageButton ? 1 : 0),
         'last_visibility_check' => $hasMessageButton !== null ? $now : null,
