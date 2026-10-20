@@ -929,6 +929,35 @@ export default function PipelinePage() {
                               </div>
                             )}
                           </td>
+                          {/* Status */}
+                          <td className="px-4 py-3 align-top">
+                            <label className="sr-only" htmlFor={`status-${rec.id}`}>Status de {rec.nameOrHandle}</label>
+                            <select
+                              id={`status-${rec.id}`}
+                              value={rec.status}
+                              onChange={(e) => {
+                                e.stopPropagation();
+                                void handleInlineStatus(rec.id, e.target.value as InfluencerRecord['status']);
+                              }}
+                              onClick={(e) => e.stopPropagation()}
+                              className={`h-8 pl-2 pr-7 rounded-full border text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-violet-200 cursor-pointer ${ss.badge}`}
+                            >
+                              {ALL_STATUSES.map((s) => (
+                                <option key={s} value={s}>{s}</option>
+                              ))}
+                            </select>
+                            <div className="mt-1 text-[11px] text-slate-500 font-mono">{rec.responseReceived}</div>
+                            {rec.segmentation_level !== null && rec.segmentation_level !== undefined && (
+                              <div className={`mt-1 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold border ${
+                                rec.segmentation_level === 1
+                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                  : 'bg-amber-50 text-amber-700 border-amber-200'
+                              }`}>
+                                IA: {rec.segmentation_level}
+                              </div>
+                            )}
+                          </td>
+                          {/* Tipo (Insiders / Motorista) */}
                           <td className="px-4 py-3 align-top">
                             <label className="sr-only" htmlFor={`tipo-${rec.id}`}>Tipo de {rec.nameOrHandle}</label>
                             <select
@@ -952,6 +981,7 @@ export default function PipelinePage() {
                               <option value="Motorista">Motorista</option>
                             </select>
                           </td>
+                          {/* Visibilidade */}
                           <td className="px-4 py-3 align-top">
                             <div className="flex flex-col items-center gap-1" title={
                               rec.hasMessageButton === true ? 'Perfil aberto — botão de mensagem disponível' :
@@ -975,33 +1005,6 @@ export default function PipelinePage() {
                                 </div>
                               )}
                             </div>
-                          </td>
-                          <td className="px-4 py-3 align-top">
-                            <label className="sr-only" htmlFor={`status-${rec.id}`}>Status de {rec.nameOrHandle}</label>
-                            <select
-                              id={`status-${rec.id}`}
-                              value={rec.status}
-                              onChange={(e) => {
-                                e.stopPropagation();
-                                void handleInlineStatus(rec.id, e.target.value as InfluencerRecord['status']);
-                              }}
-                              onClick={(e) => e.stopPropagation()}
-                              className={`h-8 pl-2 pr-7 rounded-full border text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-violet-200 cursor-pointer ${ss.badge}`}
-                            >
-                              {ALL_STATUSES.map((s) => (
-                                <option key={s} value={s}>{s}</option>
-                              ))}
-                            </select>
-                            <div className="mt-1 text-[11px] text-slate-500 font-mono">{rec.responseReceived}</div>
-                            {rec.segmentation_level !== null && rec.segmentation_level !== undefined && (
-                              <div className="mt-1 inline-flex items-center gap-1 px-1.5 py-0.5 rounded-full text-[10px] font-bold border ${
-                                rec.segmentation_level === 1
-                                  ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
-                                  : 'bg-amber-50 text-amber-700 border-amber-200'
-                              }">
-                                IA: {rec.segmentation_level}
-                              </div>
-                            )}
                           </td>
                           <td className="px-4 py-3 align-top whitespace-nowrap">
                             <span className="inline-flex items-center gap-1 text-xs font-mono text-slate-700">
