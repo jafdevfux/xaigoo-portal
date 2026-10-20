@@ -394,6 +394,7 @@ export default function PipelinePage() {
       videosSent: rec.videosSent,
       nextAction: rec.nextAction,
       notes: rec.notes,
+      tipo: rec.tipo ?? '',
     });
     setFormErrors({});
     setShowForm(true);
@@ -436,6 +437,7 @@ export default function PipelinePage() {
         videosSent: formData.videosSent,
         nextAction: formData.nextAction.trim(),
         notes: formData.notes.trim(),
+        tipo: formData.tipo ?? '',
       };
       try {
         if (editingRecord) {
@@ -509,6 +511,25 @@ export default function PipelinePage() {
       }
     },
     [pushToast],
+  );
+
+  // Inline tipo change — otimista com rollback
+  const handleInlineTipo = useCallback(
+    async (id: string, newTipo: string) => {
+      const prev = records.find((r) => r.id === id);
+      if (!prev || prev.tipo === newTipo) return;
+      setRecords((p) => p.map((r) => (r.id === id ? { ...r, tipo: newTipo } : r)));
+      try {
+        const updated = await updateInfluencer(id, { tipo: newTipo } as CreateInfluencerPayload);
+        setRecords((p) => p.map((r) => (r.id === id ? updated : r)));
+        pushToast(`Tipo → ${newTipo || 'Sem tipo'}`);
+      } catch (err) {
+        setRecords((p) => p.map((r) => (r.id === id ? prev : r)));
+        const msg = err instanceof ApiError ? err.message : 'Erro ao atualizar tipo.';
+        pushToast(msg, 'error');
+      }
+    },
+    [records, pushToast],
   );
 
   // Drag-and-drop nativo para Kanban
@@ -909,7 +930,27 @@ export default function PipelinePage() {
                             )}
                           </td>
                           <td className="px-4 py-3 align-top">
-                            {rec.tipo || <span className="text-slate-400">—</span>}
+                            <label className="sr-only" htmlFor={`tipo-${rec.id}`}>Tipo de {rec.nameOrHandle}</label>
+                            <select
+                              id={`tipo-${rec.id}`}
+                              value={rec.tipo || ''}
+                              onChange={(e) => {
+                                e.stopPropagation();
+                                void handleInlineTipo(rec.id, e.target.value);
+                              }}
+                              onClick={(e) => e.stopPropagation()}
+                              className={`h-8 pl-2 pr-7 rounded-full border text-xs font-semibold focus:outline-none focus:ring-2 focus:ring-violet-200 cursor-pointer ${
+                                rec.tipo === 'Insiders'
+                                  ? 'bg-blue-50 text-blue-700 border-blue-200'
+                                  : rec.tipo === 'Motorista'
+                                    ? 'bg-amber-50 text-amber-700 border-amber-200'
+                                    : 'bg-slate-50 text-slate-500 border-slate-200'
+                              }`}
+                            >
+                              <option value="">Selecione...</option>
+                              <option value="Insiders">Insiders</option>
+                              <option value="Motorista">Motorista</option>
+                            </select>
                           </td>
                           <td className="px-4 py-3 align-top">
                             <div className="flex flex-col items-center gap-1" title={

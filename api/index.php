@@ -197,7 +197,7 @@ if (($segments[0] ?? null) === 'influencers') {
             $stmt = $pdo->query(
                 'SELECT id, name_or_handle, platform, link, audience_type, justification, ' .
                 'first_contact_date, status, response_received, proposal_sent, videos_sent, ' .
-                'next_action, notes, created_at, updated_at ' .
+                'next_action, notes, tipo, created_at, updated_at ' .
                 'FROM influencers ORDER BY updated_at DESC, created_at DESC'
             );
             $rows = $stmt->fetchAll();

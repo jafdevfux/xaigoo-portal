@@ -160,6 +160,7 @@ export type InfluencerRecord = {
   videosSent: boolean;
   nextAction: string;
   notes: string;
+  tipo?: string; // 'Insiders' | 'Motorista' | ''
   segmentation_level?: number | null; // 1 | 2 | null (IA off)
   hasMessageButton?: boolean | null; // true=tem botão, false=não tem, null=não verificado
   lastVisibilityCheck?: string | null; // YYYY-MM-DD HH:MM:SS
