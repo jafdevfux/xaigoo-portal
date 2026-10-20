@@ -11,10 +11,10 @@
   "headers": [
     {
       "source": "/xaigoo-extractor.zip",
-      "headers": {
-        "Content-Type": "application/zip",
-        "Content-Disposition": "attachment; filename=\"xaigoo-extractor.zip\""
-      }
+      "headers": [
+        { "key": "Content-Type", "value": "application/zip" },
+        { "key": "Content-Disposition", "value": "attachment; filename=\"xaigoo-extractor.zip\"" }
+      ]
     }
   ]
 }
